@@ -1,11 +1,14 @@
-import { Message } from 'discord.js';
-import MessageListener from './MessageListener';
-import { SqliteDatabase, ToeCounterRow } from '../types';
+import { Message, Client } from 'discord.js';
 import SqliteDatabaseService from '../services/SqliteDatabaseService';
+import { ToeCounterRow } from '../types';
+import EventHandlerInterface from './EventHandlerInterface';
 
-export default class ToesFunction extends MessageListener {
-  constructor(db: SqliteDatabase) {
-    super('toes', { description: 'Listens for toes' });
+export default class ToeHandler extends EventHandlerInterface {
+  constructor(client: Client) {
+    super(client);
+    this.name = 'toes';
+
+    this.client.on('message', this.execute);
   }
 
   async execute(message: Message) {

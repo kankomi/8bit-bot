@@ -1,14 +1,14 @@
-import Discord from 'discord.js';
+import Discord, { Client } from 'discord.js';
 import dotenv from 'dotenv';
 import fs from 'fs';
 import Command from './commands/Command';
-import MessageListener from './messageListener/MessageListener';
 import SqliteDatabaseService from './services/SqliteDatabaseService';
+import EventHandlerFactory from './eventhandler/EventHandlerFactory';
 
 dotenv.config();
 
 const BOT_TOKEN = process.env.BOT_TOKEN;
-const PREFIX = '!bit';
+export const PREFIX = '!bit';
 
 async function loadCommands(): Promise<Discord.Collection<string, Command>> {
   const commands = new Discord.Collection<string, Command>();
@@ -26,27 +26,6 @@ async function loadCommands(): Promise<Discord.Collection<string, Command>> {
   }
 
   return commands;
-}
-
-async function loadMessageListener(): Promise<
-  Discord.Collection<string, MessageListener>
-> {
-  const messageListener = new Discord.Collection<string, MessageListener>();
-
-  const commandFiles = fs
-    .readdirSync(`./src/messageListener`)
-    .filter((f) => f.match(/.*\.ts$/) && !f.match(/^MessageListener\.[js|ts]/));
-
-  for (const file of commandFiles) {
-    const ListenerClass = (await import(`./messageListener/${file}`)).default;
-    const listener: MessageListener = new ListenerClass();
-
-    messageListener.set(listener.name, listener);
-
-    console.log(`Loaded message listener '${listener.name}'.`);
-  }
-
-  return messageListener;
 }
 
 function setupClient(client: Discord.Client): void {
@@ -72,7 +51,7 @@ function setupClient(client: Discord.Client): void {
   setupClient(client);
   await SqliteDatabaseService.getDatabase();
   const commands = await loadCommands();
-  const messageListener = await loadMessageListener();
+  await EventHandlerFactory.initialize(client);
 
   client.on('message', (message) => {
     const messageContent = message.content.trim().replace(/\s+/, ' ');
@@ -80,11 +59,6 @@ function setupClient(client: Discord.Client): void {
       .substring(PREFIX.length)
       .trim()
       .split(' ');
-
-    // execute message listeners
-    for (const l of messageListener.array()) {
-      l.execute(message);
-    }
 
     if (!messageContent.startsWith(PREFIX)) return;
 
