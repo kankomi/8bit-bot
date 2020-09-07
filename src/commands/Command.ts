@@ -6,11 +6,13 @@ export interface CommandConfig {
 
 export default class Command {
   name: string;
-  config: CommandConfig = {};
+  config: CommandConfig;
 
-  constructor(name: string, options: CommandConfig = {}) {
+  constructor(name: string, config: CommandConfig) {
     this.name = name;
+    this.config = config;
   }
+
   execute(message: Message, args: string[]) {
     throw new Error('execute is not implemented');
   }

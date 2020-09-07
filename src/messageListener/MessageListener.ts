@@ -3,15 +3,15 @@ import { SqliteDatabase } from '../types';
 
 export interface MessageListenerConfig {
   description: string;
-  database: SqliteDatabase;
 }
 
 export default class MessageListener {
-  name: string = '';
+  name: string;
   config?: MessageListenerConfig;
 
-  constructor(config?: MessageListenerConfig) {
+  constructor(name: string, config?: MessageListenerConfig) {
     this.config = config;
+    this.name = name;
   }
 
   execute(message: Message) {

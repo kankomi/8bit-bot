@@ -6,6 +6,7 @@ import MessageListener from './messageListener/MessageListener';
 import sqlite3 from 'sqlite3';
 import { open } from 'sqlite';
 import { SqliteDatabase } from './types';
+import SqliteDatabaseService from './services/SqliteDatabaseService';
 
 dotenv.config();
 
@@ -31,9 +32,9 @@ async function loadCommands(): Promise<Discord.Collection<string, Command>> {
   return commands;
 }
 
-async function loadMessageListener(
-  database: SqliteDatabase
-): Promise<Discord.Collection<string, MessageListener>> {
+async function loadMessageListener(): Promise<
+  Discord.Collection<string, MessageListener>
+> {
   const messageListener = new Discord.Collection<string, MessageListener>();
 
   const commandFiles = fs
@@ -42,7 +43,7 @@ async function loadMessageListener(
 
   for (const file of commandFiles) {
     const ListenerClass = (await import(`./messageListener/${file}`)).default;
-    const listener: MessageListener = new ListenerClass({ database });
+    const listener: MessageListener = new ListenerClass();
 
     messageListener.set(listener.name, listener);
 
@@ -70,28 +71,12 @@ function setupClient(client: Discord.Client): void {
     });
 }
 
-async function setupDb() {
-  const db = await open({
-    filename: 'database.sqlite3',
-    driver: sqlite3.Database,
-  });
-
-  await db.exec(`CREATE TABLE IF NOT EXISTS ToeCounter (
-        userId TEXT PRIMARY KEY,
-        toeCount INT NOT NULL
-    )`);
-
-  return db;
-}
-
 (async function main() {
-  const client = new Discord.Client({
-    partials: ['REACTION'],
-  });
+  const client = new Discord.Client();
   setupClient(client);
-  const db = await setupDb();
+  await SqliteDatabaseService.getDatabase();
   const commands = await loadCommands();
-  const messageListener = await loadMessageListener(db);
+  const messageListener = await loadMessageListener();
 
   client.on('message', (message) => {
     const messageContent = message.content.trim().replace(/\s+/, ' ');

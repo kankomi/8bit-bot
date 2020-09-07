@@ -1,43 +1,40 @@
 import { Message } from 'discord.js';
 import MessageListener from './MessageListener';
-import { SqliteDatabase } from '../types';
-
-type ToeCounterRow = {
-  userId: string;
-  toeCount: number;
-};
+import { SqliteDatabase, ToeCounterRow } from '../types';
+import SqliteDatabaseService from '../services/SqliteDatabaseService';
 
 export default class ToesFunction extends MessageListener {
   constructor(db: SqliteDatabase) {
-    super({ description: 'Listens for toes', database: db });
-    this.name = 'toes';
+    super('toes', { description: 'Listens for toes' });
   }
 
   async execute(message: Message) {
-    if (!message.content.toLowerCase().includes('toes')) return;
+    if (
+      message.client.user?.id === message.author.id ||
+      !message.content.toLowerCase().includes('toes')
+    )
+      return;
     message.react('👌');
 
     const authorId = message.author.id;
-    const db = this.config?.database;
+    const db = await SqliteDatabaseService.getDatabase();
 
     if (!db) {
       console.error('db is not configured!');
       return;
     }
 
-    console.log(db);
-
-    let res = await db.all<ToeCounterRow>(
-      'SELECT toeCount from ToeCounter WHERE userId = ?',
+    const row = await db.get<ToeCounterRow>(
+      'SELECT * FROM ToeCounter WHERE userId = ?',
       authorId
     );
 
-    if (!res) {
+    if (!row) {
       await db.exec(`INSERT INTO ToeCounter VALUES ("${authorId}", 1)`);
     } else {
-      const newCount = res.toeCount + 1;
+      const newCount = row.toeCount + 1;
       await db.run(
-        `UPDATE ToeCounter SET toeCount = ? WHERE where authorId = ?`,
+        `UPDATE ToeCounter SET toeCount = ? WHERE userId = ?`,
         newCount,
         authorId
       );
