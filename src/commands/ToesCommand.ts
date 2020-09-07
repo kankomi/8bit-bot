@@ -12,7 +12,6 @@ export default class ToesCommand extends Command {
   }
 
   async execute(message: Message, args: string[]) {
-    console.log(args);
     const [userMention] = args;
 
     const user = getUserFromMention(message.client, userMention);

@@ -4,7 +4,9 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "dev": "nodemon src/index.ts"
+    "dev": "NODE_ENV=development nodemon src/index.ts",
+    "build": "tsc",
+    "start": "tsc && node ./build/index.js"
   },
   "nodemonConfig": {
     "ignore": [
