@@ -9,13 +9,12 @@ dotenv.config();
 
 const BOT_TOKEN = process.env.BOT_TOKEN;
 const PREFIX = '!bit';
-const SOURCE_DIR = process.env.NODE_ENV === 'development' ? './src' : './build';
 
 async function loadCommands(): Promise<Discord.Collection<string, Command>> {
   const commands = new Discord.Collection<string, Command>();
   const commandFiles = fs
-    .readdirSync(`${SOURCE_DIR}/commands`)
-    .filter((f) => f.match(/.*[\.ts|\.js]$/) && !f.match(/^Command\.[js|ts]/));
+    .readdirSync(`./src/commands`)
+    .filter((f) => f.match(/.*\.ts$/) && !f.match(/^Command\.[js|ts]/));
 
   for (const file of commandFiles) {
     const CommandClass = (await import(`./commands/${file}`)).default;
@@ -35,10 +34,8 @@ async function loadMessageListener(): Promise<
   const messageListener = new Discord.Collection<string, MessageListener>();
 
   const commandFiles = fs
-    .readdirSync(`${SOURCE_DIR}/messageListener`)
-    .filter(
-      (f) => f.match(/.*[\.ts|\.js]$/) && !f.match(/^MessageListener\.[js|ts]/)
-    );
+    .readdirSync(`./src/messageListener`)
+    .filter((f) => f.match(/.*\.ts$/) && !f.match(/^MessageListener\.[js|ts]/));
 
   for (const file of commandFiles) {
     const ListenerClass = (await import(`./messageListener/${file}`)).default;
