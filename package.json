@@ -4,7 +4,7 @@
   "main": "src/index.js",
   "license": "MIT",
   "engines": {
-    "node": "12.x"
+    "node": "14.x"
   },
   "scripts": {
     "dev": "NODE_ENV=development nodemon src/index.ts",

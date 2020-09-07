@@ -1,14 +1,12 @@
 import { Message } from 'discord.js';
+import SqliteDatabaseService from '../services/SqliteDatabaseService';
+import { ToeCounterRow } from '../types';
 import { getUserFromMention } from '../utils';
 import Command from './Command';
-import SqliteDatabaseService, {
-  TABLES,
-} from '../services/SqliteDatabaseService';
-import { ToeCounterRow } from '../types';
 
 export default class ToesCommand extends Command {
   constructor() {
-    super('toecount', { description: 'Gets toes count' });
+    super('toecount', { description: 'Gets the toes count' });
   }
 
   async execute(message: Message, args: string[]) {

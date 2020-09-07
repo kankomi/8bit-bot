@@ -13,11 +13,15 @@
 
   // Add the IDs of extensions you want installed when the container is created.
   "extensions": [
-	"dbaeumer.vscode-eslint",
-	"jasonhaxstuff.discord-js-tools",
-	"esbenp.prettier-vscode",
-	"rvest.vs-code-prettier-eslint"
-]
+    "dbaeumer.vscode-eslint",
+    "jasonhaxstuff.discord-js-tools",
+    "esbenp.prettier-vscode",
+    "rvest.vs-code-prettier-eslint"
+  ]
+  // "mounts": [
+  //   "source=${localEnv:HOME}${localEnv:USERPROFILE}/.ssh,target=/root/.ssh,type=bind,consistency=cached"
+  // ],
+  // // "postAttachCommand": "chmod -R 600 /root/.ssh"
 
   // Use 'forwardPorts' to make a list of ports inside the container available locally.
   // "forwardPorts": [],
