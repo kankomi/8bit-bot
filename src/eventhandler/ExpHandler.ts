@@ -1,8 +1,7 @@
-import { Message, Client } from 'discord.js';
-import EventHandlerInterface from './EventHandlerInterface';
-import Ranking from '../db/models/Ranking';
-
+import { Client, Message } from 'discord.js';
 import { prefix } from '../config.json';
+import Ranking from '../db/models/Ranking';
+import EventHandlerInterface from './EventHandlerInterface';
 
 const MAX_LEVEL = 100;
 const MAX_LEVEL_EXP = 100000000;
@@ -41,14 +40,17 @@ function getLevelForExp(exp: number): number {
 }
 
 export default class ExpHandler extends EventHandlerInterface {
+  messageTimestampCache: { [userId: string]: number } = {};
+
   constructor(client: Client) {
     super(client);
     this.name = 'exp';
 
-    this.client.on('message', this.execute);
+    this.client.on('message', (msg) => {
+      this.execute(msg);
+    });
   }
 
-  // eslint-disable-next-line class-methods-use-this
   async execute(message: Message) {
     const userId = message.author.id;
     const guildId = message.guild?.id;
@@ -56,6 +58,15 @@ export default class ExpHandler extends EventHandlerInterface {
     if (message.author.bot === true || message.content.startsWith(prefix)) {
       return;
     }
+    const lastMessageTimestamp =
+      userId in this.messageTimestampCache
+        ? this.messageTimestampCache[userId]
+        : undefined;
+    if (lastMessageTimestamp && Date.now() - lastMessageTimestamp < 10 * 1000) {
+      return;
+    }
+
+    this.messageTimestampCache[userId] = message.createdTimestamp;
 
     const result = await Ranking.findOne({
       where: { userId, guildId },
