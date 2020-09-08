@@ -1,28 +1,29 @@
 import Discord from 'discord.js';
 import dotenv from 'dotenv';
 import fs from 'fs';
+import { prefix } from './config.json';
 import { initializeDb } from './db';
-import ToeCounter from './db/models/ToeCounter';
 import EventHandlerFactory from './eventhandler/EventHandlerFactory';
 import { Command } from './types';
-import { prefix } from './config.json';
+import logger from './logging';
 
 dotenv.config();
 
-const BOT_TOKEN = process.env.BOT_TOKEN;
+const { BOT_TOKEN } = process.env;
 
 async function loadCommands(): Promise<Discord.Collection<string, Command>> {
   const commands = new Discord.Collection<string, Command>();
   const commandFiles = fs
-    .readdirSync(`./src/commands`)
+    .readdirSync('./src/commands')
     .filter((f) => f.match(/.*\.ts$/) && !f.match(/^Command\.[js|ts]/));
 
   for (const file of commandFiles) {
+    // eslint-disable-next-line no-await-in-loop
     const command: Command = (await import(`./commands/${file}`)).default;
 
     commands.set(command.name, command);
 
-    console.log(`Loaded command '${command.name}'.`);
+    logger.info(`Loaded command '${command.name}'.`);
   }
 
   return commands;
@@ -30,23 +31,23 @@ async function loadCommands(): Promise<Discord.Collection<string, Command>> {
 
 function setupClient(client: Discord.Client): void {
   client
-    .on('error', console.error)
-    .on('warn', console.warn)
-    //   .on('debug', console.log)
+    .on('error', logger.error)
+    .on('warn', logger.warn)
+    //   .on('debug', logger.info)
     .on('ready', () => {
-      console.log(
+      logger.info(
         `Client ready; logged in as ${client.user?.username}#${client.user?.discriminator} (${client.user?.id})`
       );
     })
     .on('disconnect', () => {
-      console.warn('Disconnected!');
+      logger.warn('Disconnected!');
     })
     .on('reconnecting', () => {
-      console.warn('Reconnecting...');
+      logger.warn('Reconnecting...');
     });
 }
 
-(async function main() {
+async function main() {
   const client = new Discord.Client();
   setupClient(client);
   const commands = await loadCommands();
@@ -72,4 +73,6 @@ function setupClient(client: Discord.Client): void {
   });
 
   client.login(BOT_TOKEN);
-})();
+}
+
+main();

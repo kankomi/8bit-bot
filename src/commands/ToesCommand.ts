@@ -1,12 +1,11 @@
-import { getUserFromMention } from '../utils';
-import ToeCounter from '../db/models/ToeCounter';
 import { Message } from 'discord.js';
+import ToeCounter from '../db/models/ToeCounter';
 import { Command } from '../types';
-import { prefix } from '../config.json';
+import { getUserFromMention } from '../utils';
 
 const ToesCommand: Command = {
   name: 'toes',
-  usage: `toes @user`,
+  usage: 'toes @user',
   description: 'Shows how many times @user mentioned toes',
 
   async execute(message: Message, args: string[]) {

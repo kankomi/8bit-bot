@@ -2,9 +2,12 @@ import { Collection, Client } from 'discord.js';
 import fs from 'fs';
 import path from 'path';
 import EventHandlerInterface from './EventHandlerInterface';
+import logger from '../logging';
 
 export default class EventHandlerFactory {
   private static handler = new Collection<string, EventHandlerInterface>();
+
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   private constructor() {}
 
   static async initialize(client: Client) {
@@ -18,7 +21,7 @@ export default class EventHandlerFactory {
 
       this.handler.set(listener.name, listener);
 
-      console.log(`Loaded event listener '${listener.name}'.`);
+      logger.info(`Loaded event listener '${listener.name}'.`);
     }
   }
 }

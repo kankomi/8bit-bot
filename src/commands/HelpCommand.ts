@@ -8,7 +8,7 @@ async function loadCommands(): Promise<Command[]> {
   const promises: Promise<any>[] = [];
 
   for (const file of fs.readdirSync(__dirname)) {
-    promises.push(import('./' + file));
+    promises.push(import(`./${file}`));
   }
 
   const cmds = await Promise.all(promises);
@@ -17,16 +17,14 @@ async function loadCommands(): Promise<Command[]> {
 
 const HelpCommand: Command = {
   name: 'help',
-  usage: `help`,
+  usage: 'help',
   description: 'Shows this help',
-  async execute(message: Message, args: string[]) {
+  async execute(message: Message) {
     const commands = await loadCommands();
 
     let helpStr = `8bit-Bot commands:
 \`\`\`
 `;
-
-    console.log(commands);
     for (const cmd of commands) {
       helpStr += `${prefix}${cmd.usage}        - ${cmd.description}\n`;
     }

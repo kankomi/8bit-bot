@@ -1,15 +1,21 @@
-import { Client } from 'discord.js';
+import { Client, User } from 'discord.js';
 
-export function getUserFromMention(client: Client, mention: string) {
-  if (!mention) return;
+// eslint-disable-next-line import/prefer-default-export
+export function getUserFromMention(
+  client: Client,
+  mention: string
+): User | undefined {
+  if (!mention) return undefined;
 
   if (mention.startsWith('<@') && mention.endsWith('>')) {
-    mention = mention.slice(2, -1);
+    let m = mention.slice(2, -1);
 
-    if (mention.startsWith('!')) {
-      mention = mention.slice(1);
+    if (m.startsWith('!')) {
+      m = m.slice(1);
     }
 
-    return client.users.cache.get(mention);
+    return client.users.cache.get(m);
   }
+
+  return undefined;
 }

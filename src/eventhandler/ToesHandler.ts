@@ -11,13 +11,15 @@ export default class ToeHandler extends EventHandlerInterface {
     this.client.on('message', this.execute);
   }
 
+  // eslint-disable-next-line class-methods-use-this
   async execute(message: Message) {
     if (
       message.content.startsWith(prefix) ||
       message.client.user?.id === message.author.id ||
       !message.content.toLowerCase().includes('toes')
-    )
+    ) {
       return;
+    }
     message.react('👌');
 
     const userId = message.author.id;
@@ -26,8 +28,7 @@ export default class ToeHandler extends EventHandlerInterface {
     if (!result) {
       await ToeCounter.create({ userId, count: 1 });
     } else {
-      console.log(typeof result.count);
-      result.count = (parseInt(result.count) + 1).toString();
+      result.count = (parseInt(result.count, 10) + 1).toString();
       await result.save();
     }
   }

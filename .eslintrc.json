@@ -1,11 +1,24 @@
 {
-  "extends": "airbnb:recommended",
   "env": {
-    "node": true,
-    "es6": true
+    "browser": true,
+    "es2021": true
   },
+  "extends": ["airbnb-typescript/base"],
+  "parser": "@typescript-eslint/parser",
   "parserOptions": {
-    "ecmaVersion": 2019
+    "project": "./tsconfig.json",
+    "ecmaVersion": 12,
+    "sourceType": "module"
   },
-  "rules": {}
+  "plugins": ["@typescript-eslint"],
+  "rules": {
+    "no-console": "warn",
+    "comma-dangle": "off",
+    "import/no-extraneous-dependencies": "off",
+    "no-restricted-syntax": "off",
+    "object-curly-newline": "off",
+    "no-await-in-loop": "off",
+    "operator-linebreak": "off",
+    "@typescript-eslint/lines-between-class-members": "off"
+  }
 }

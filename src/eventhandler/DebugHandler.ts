@@ -1,5 +1,6 @@
+import { Client } from 'discord.js';
 import EventHandlerInterface from './EventHandlerInterface';
-import { Client, TextChannel } from 'discord.js';
+import logger from '../logging';
 
 export default class DebugHandler extends EventHandlerInterface {
   constructor(client: Client) {
@@ -13,7 +14,7 @@ export default class DebugHandler extends EventHandlerInterface {
         return;
       }
 
-      console.log(message.content);
+      logger.info(message.content);
     });
   }
 }
