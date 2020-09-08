@@ -1,8 +1,8 @@
-import Discord, { Client } from 'discord.js';
+import Discord from 'discord.js';
 import dotenv from 'dotenv';
 import fs from 'fs';
-import Command from './commands/Command';
-import SqliteDatabaseService from './services/SqliteDatabaseService';
+import { initializeDb } from './db';
+import ToeCounter from './db/models/ToeCounter';
 import EventHandlerFactory from './eventhandler/EventHandlerFactory';
 import { Command } from './types';
 import { prefix } from './config.json';
@@ -49,9 +49,10 @@ function setupClient(client: Discord.Client): void {
 (async function main() {
   const client = new Discord.Client();
   setupClient(client);
-  await SqliteDatabaseService.getDatabase();
   const commands = await loadCommands();
   await EventHandlerFactory.initialize(client);
+
+  await initializeDb();
 
   client.on('message', (message) => {
     const messageContent = message.content.trim().replace(/\s+/, ' ');

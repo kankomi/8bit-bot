@@ -1,7 +1,7 @@
 import { Message, Client } from 'discord.js';
-import SqliteDatabaseService from '../services/SqliteDatabaseService';
-import { ToeCounterRow } from '../types';
 import EventHandlerInterface from './EventHandlerInterface';
+import ToeCounter from '../db/models/ToeCounter';
+import { prefix } from '../config.json';
 
 export default class ToeHandler extends EventHandlerInterface {
   constructor(client: Client) {
@@ -13,34 +13,22 @@ export default class ToeHandler extends EventHandlerInterface {
 
   async execute(message: Message) {
     if (
+      message.content.startsWith(prefix) ||
       message.client.user?.id === message.author.id ||
       !message.content.toLowerCase().includes('toes')
     )
       return;
     message.react('👌');
 
-    const authorId = message.author.id;
-    const db = await SqliteDatabaseService.getDatabase();
+    const userId = message.author.id;
+    const result = await ToeCounter.findOne({ where: { userId } });
 
-    if (!db) {
-      console.error('db is not configured!');
-      return;
-    }
-
-    const row = await db.get<ToeCounterRow>(
-      'SELECT * FROM ToeCounter WHERE userId = ?',
-      authorId
-    );
-
-    if (!row) {
-      await db.exec(`INSERT INTO ToeCounter VALUES ("${authorId}", 1)`);
+    if (!result) {
+      await ToeCounter.create({ userId, count: 1 });
     } else {
-      const newCount = row.toeCount + 1;
-      await db.run(
-        `UPDATE ToeCounter SET toeCount = ? WHERE userId = ?`,
-        newCount,
-        authorId
-      );
+      console.log(typeof result.count);
+      result.count = (parseInt(result.count) + 1).toString();
+      await result.save();
     }
   }
 }
