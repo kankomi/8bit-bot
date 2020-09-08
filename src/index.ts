@@ -4,11 +4,12 @@ import fs from 'fs';
 import Command from './commands/Command';
 import SqliteDatabaseService from './services/SqliteDatabaseService';
 import EventHandlerFactory from './eventhandler/EventHandlerFactory';
+import { Command } from './types';
+import { prefix } from './config.json';
 
 dotenv.config();
 
 const BOT_TOKEN = process.env.BOT_TOKEN;
-export const PREFIX = '!bit';
 
 async function loadCommands(): Promise<Discord.Collection<string, Command>> {
   const commands = new Discord.Collection<string, Command>();
@@ -17,8 +18,7 @@ async function loadCommands(): Promise<Discord.Collection<string, Command>> {
     .filter((f) => f.match(/.*\.ts$/) && !f.match(/^Command\.[js|ts]/));
 
   for (const file of commandFiles) {
-    const CommandClass = (await import(`./commands/${file}`)).default;
-    const command: Command = new CommandClass();
+    const command: Command = (await import(`./commands/${file}`)).default;
 
     commands.set(command.name, command);
 
@@ -56,11 +56,11 @@ function setupClient(client: Discord.Client): void {
   client.on('message', (message) => {
     const messageContent = message.content.trim().replace(/\s+/, ' ');
     const [cmd, ...args] = messageContent
-      .substring(PREFIX.length)
+      .substring(prefix.length)
       .trim()
       .split(' ');
 
-    if (!messageContent.startsWith(PREFIX)) return;
+    if (!messageContent.startsWith(prefix)) return;
 
     if (!commands.has(cmd)) {
       message.reply(`command '${cmd}' does not exist!`);

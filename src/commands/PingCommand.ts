@@ -1,11 +1,14 @@
 import { Message } from 'discord.js';
-import Command from './Command';
+import { Command } from '../types';
+import { prefix } from '../config.json';
 
-export default class PingCommand extends Command {
-  constructor() {
-    super('ping', { description: 'Ping!' });
-  }
-  execute(message: Message, args: string[]) {
+const PingCommand: Command = {
+  name: 'ping',
+  usage: `ping`,
+  description: 'Bot will answer with pong',
+  execute(message: Message, args: []) {
     message.channel.send('Pong!');
-  }
-}
+  },
+};
+
+export default PingCommand;

@@ -1,13 +1,13 @@
-import { Message } from 'discord.js';
-import SqliteDatabaseService from '../services/SqliteDatabaseService';
-import { ToeCounterRow } from '../types';
 import { getUserFromMention } from '../utils';
-import Command from './Command';
+import ToeCounter from '../db/models/ToeCounter';
+import { Message } from 'discord.js';
+import { Command } from '../types';
+import { prefix } from '../config.json';
 
-export default class ToesCommand extends Command {
-  constructor() {
-    super('toecount', { description: 'Gets the toes count' });
-  }
+const ToesCommand: Command = {
+  name: 'toes',
+  usage: `toes @user`,
+  description: 'Shows how many times @user mentioned toes',
 
   async execute(message: Message, args: string[]) {
     const [userMention] = args;
@@ -17,19 +17,17 @@ export default class ToesCommand extends Command {
       message.channel.send(`cannot find user ${userMention}`);
       return;
     }
-    const db = await SqliteDatabaseService.getDatabase();
 
-    const row = await db.get<ToeCounterRow>(
-      'SELECT * from ToeCounter where userId = ?',
-      user.id
-    );
+    const result = await ToeCounter.findOne({ where: { userId: user.id } });
 
-    if (!row) {
+    if (!result) {
       message.channel.send(`${user.username} didn't mention toes even once!`);
     } else {
       message.channel.send(
-        `${user.username} mentioned toes ${row.toeCount} times!`
+        `${user.username} mentioned toes ${result.count} times!`
       );
     }
-  }
-}
+  },
+};
+
+export default ToesCommand;
