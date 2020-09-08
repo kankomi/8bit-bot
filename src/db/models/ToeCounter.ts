@@ -2,7 +2,7 @@ import { Sequelize, Model, DataTypes } from 'sequelize';
 
 class ToeCounter extends Model {
   userId!: string;
-  count!: string;
+  count!: number;
 }
 
 export function init(sequelize: Sequelize) {
@@ -14,7 +14,7 @@ export function init(sequelize: Sequelize) {
         primaryKey: true,
       },
       count: {
-        type: DataTypes.BIGINT,
+        type: DataTypes.DECIMAL,
         allowNull: false,
       },
     },

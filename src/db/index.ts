@@ -7,6 +7,7 @@ export async function initializeDb() {
     dialect: 'postgres',
     logging: false,
     dialectOptions: {
+      decimalNumbers: true,
       ssl: {
         rejectUnauthorized: false,
       },

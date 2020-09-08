@@ -28,7 +28,7 @@ export default class ToeHandler extends EventHandlerInterface {
     if (!result) {
       await ToeCounter.create({ userId, count: 1 });
     } else {
-      result.count = (parseInt(result.count, 10) + 1).toString();
+      result.count += 1;
       await result.save();
     }
   }

@@ -19,6 +19,7 @@
     "object-curly-newline": "off",
     "no-await-in-loop": "off",
     "operator-linebreak": "off",
-    "@typescript-eslint/lines-between-class-members": "off"
+    "@typescript-eslint/lines-between-class-members": "off",
+    "no-plusplus": "off"
   }
 }
