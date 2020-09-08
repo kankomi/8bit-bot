@@ -46,7 +46,7 @@ const RankingCommand: Command = {
         );
       }
     }
-    logger.info('ranmk is', rank.level);
+
     message.channel.send(
       `<@${userId}> is level ${rank.level}, EXP ${rank.experience}/${
         LEVELS[rank.level + 1]
