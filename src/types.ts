@@ -9,5 +9,5 @@ export type Command = {
   name: string;
   usage: string;
   description: string;
-  execute(message: Message, args: string[]): void;
+  execute(message: Message, args: string[]): any;
 };
