@@ -16,7 +16,6 @@ export default abstract class UserModel extends Dummy {
         userId: {
           type: DataTypes.STRING,
           allowNull: false,
-          primaryKey: true,
         },
         guildId: {
           type: DataTypes.STRING,
