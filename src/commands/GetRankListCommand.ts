@@ -23,7 +23,7 @@ const RankingCommand: Command = {
 
     const rankings = await Ranking.findAll({
       where: { guildId },
-      order: [['level', 'DESC']],
+      order: [['experience', 'DESC']],
     });
 
     if (!rankings) {
