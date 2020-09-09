@@ -1,4 +1,12 @@
-import { Client, Message, VoiceState, Collection } from 'discord.js';
+import {
+  Client,
+  Message,
+  VoiceState,
+  Collection,
+  MessageReaction,
+  User,
+  PartialUser,
+} from 'discord.js';
 import Ranking from '../db/models/Ranking';
 import logger from '../logging';
 import TimeoutCache from '../TimeoutCache';
@@ -11,6 +19,8 @@ const FIRST_LEVEL_EXP = 1000;
 // experience gained
 const MESSAGE_EXP = 10;
 const VOICE_PER_M_EXP = 1;
+const GIVE_REACTION_EXP = 5;
+const RECEIVE_REACTION_EXP = 10;
 
 const B = Math.log(MAX_LEVEL_EXP / FIRST_LEVEL_EXP) / (MAX_LEVEL - 1);
 const A = FIRST_LEVEL_EXP / (Math.exp(B) - 1);
@@ -42,7 +52,8 @@ function getLevelForExp(exp: number): number {
 }
 
 export default class ExpHandler extends EventHandlerInterface {
-  cooldowns = new TimeoutCache(10);
+  messageCooldowns = new TimeoutCache(5);
+  reactionCooldowns = new TimeoutCache(10);
   inVoiceChatTimestamps = new Collection<string, number>();
 
   constructor(client: Client) {
@@ -55,6 +66,10 @@ export default class ExpHandler extends EventHandlerInterface {
 
     this.client.on('voiceStateUpdate', (oldState, newState) => {
       this.onVoiceStateUpdate(oldState, newState);
+    });
+
+    this.client.on('messageReactionAdd', (reaction, user) => {
+      this.onMessageReactionAdd(reaction, user);
     });
   }
 
@@ -72,22 +87,22 @@ export default class ExpHandler extends EventHandlerInterface {
       return;
     }
 
-    if (!this.cooldowns.isExpired(userId)) {
+    if (!this.messageCooldowns.isExpired(userId)) {
       logger.info(
-        `${message.author.username} exp gain is on cooldown for ${this.cooldowns.timeToExpired(
-          userId
-        )} seconds.`
+        `${
+          message.author.username
+        } exp gain is on cooldown for ${this.messageCooldowns.timeToExpired(userId)} seconds.`
       );
 
       return;
     }
 
-    this.cooldowns.set(userId, message.createdTimestamp);
+    this.messageCooldowns.set(userId, message.createdTimestamp);
 
     await this.giveExp(userId, guildId, MESSAGE_EXP);
   }
 
-  async onVoiceStateUpdate(oldState: VoiceState, newState: VoiceState) {
+  onVoiceStateUpdate(oldState: VoiceState, newState: VoiceState) {
     const userId = newState.member?.user.id;
     const guildId = newState.guild.id;
 
@@ -125,6 +140,37 @@ export default class ExpHandler extends EventHandlerInterface {
           `${newState.member?.user.username} gained ${exp} exp for being in VC for ${minutesinVc} minutes.`
         );
       }
+    }
+  }
+
+  async onMessageReactionAdd(reaction: MessageReaction, user: User | PartialUser) {
+    const message = await reaction.message.fetch();
+    const userIdReceived = message.author.id;
+    const userIdGiven = user.id;
+    const guildId = message.guild?.id;
+    const { NODE_ENV } = process.env;
+
+    if (!guildId) {
+      logger.warn('Cannot get guildId in onMessageReactionAdd');
+      return;
+    }
+
+    // ignore reaction given to your own message
+    if (userIdGiven === userIdReceived && NODE_ENV !== 'development') {
+      return;
+    }
+
+    // always give the receiver exp
+    await this.giveExp(userIdReceived, guildId, RECEIVE_REACTION_EXP);
+    logger.info(
+      `Giving ${message.author.username} ${RECEIVE_REACTION_EXP} exp for getting a reaction.`
+    );
+
+    // give reaction giver exp on cooldown
+    if (this.reactionCooldowns.isExpired(userIdGiven)) {
+      await this.giveExp(userIdGiven, guildId, GIVE_REACTION_EXP);
+      logger.info(`Giving ${user.username} ${GIVE_REACTION_EXP} exp for giving a reaction.`);
+      this.reactionCooldowns.set(userIdGiven);
     }
   }
 

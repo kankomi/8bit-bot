@@ -28,7 +28,7 @@ function setupClient(client: Discord.Client): void {
 
 async function main() {
   const client = new Discord.Client({
-    partials: ['GUILD_MEMBER'],
+    partials: ['GUILD_MEMBER', 'MESSAGE', 'REACTION'],
   });
   setupClient(client);
   await EventHandlerFactory.initialize(client);
