@@ -84,6 +84,10 @@ export default class ExpHandler extends EventHandlerInterface {
       return;
     }
 
+    if (newState.member?.user.bot) {
+      return;
+    }
+
     if (oldState.channelID && newState.channelID) {
       // back from AFK channel
       if (!oldState.channel?.speakable && newState.channel?.speakable) {
@@ -139,6 +143,11 @@ export default class ExpHandler extends EventHandlerInterface {
 
     if (!guildId) {
       logger.warn('Cannot get guildId in onMessageReactionAdd');
+      return;
+    }
+
+    // ignore bots
+    if (user.bot) {
       return;
     }
 
