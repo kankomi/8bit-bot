@@ -21,6 +21,7 @@
     "operator-linebreak": "off",
     "@typescript-eslint/lines-between-class-members": "off",
     "no-plusplus": "off",
-    "class-methods-use-this": "off"
+    "class-methods-use-this": "off",
+    "no-underscore-dangle": "off"
   }
 }
