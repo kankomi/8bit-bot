@@ -38,7 +38,7 @@ export function init(sequelize: Sequelize) {
       level: {
         type: DataTypes.FLOAT,
         allowNull: false,
-        defaultValue: 0,
+        defaultValue: 1,
       },
     },
     { sequelize }

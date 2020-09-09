@@ -2,6 +2,7 @@ import { Message } from 'discord.js';
 import Ranking from '../db/models/Ranking';
 import logger from '../logging';
 import { Command } from '../types';
+import { MAX_LEVEL } from '../experience';
 
 async function getOrCreateRanking(userId: string, guildId: string): Promise<Ranking | undefined> {
   let ranking = await Ranking.findOne({
@@ -23,12 +24,13 @@ async function getOrCreateRanking(userId: string, guildId: string): Promise<Rank
   return ranking;
 }
 
-const GiftExpCommand: Command = {
-  name: 'gift',
-  usage: '[@user] [amount]',
+const SetLevelCommand: Command = {
+  name: 'setlvl',
+  usage: '[@user] [level]',
   cooldown: 0,
   args: true,
-  description: 'Gifts [amount] exp to [@user]',
+  permission: 'MANAGE_CHANNELS',
+  description: 'Set [@user]s level to [level]',
   async execute(message: Message, args: string[]) {
     if (message.author.bot) {
       return;
@@ -40,19 +42,21 @@ const GiftExpCommand: Command = {
     }
 
     if (args.length < 2) {
-      message.reply('need `[user] [amount]` as argument');
+      message.reply('need `[user] [level]` as argument');
       return;
     }
 
-    const amount = parseInt(args[1], 10);
+    const level = parseInt(args[1], 10);
 
-    if (isNaN(amount) || amount < 0) {
-      message.reply(`${args[1]} is an invalid amount, need a positive number`);
+    if (isNaN(level) || level < 0 || level > MAX_LEVEL) {
+      message.reply(
+        `${args[1]} is an invalid level, need a positive number between 0 and ${MAX_LEVEL}`
+      );
       return;
     }
 
-    const receiverUserId = message.mentions.users.first()?.id;
     const authorUserId = message.author.id;
+    const receiverUserId = message.mentions.users.first()?.id;
     const guildId = message.guild.id;
 
     if (!receiverUserId) {
@@ -60,26 +64,18 @@ const GiftExpCommand: Command = {
       return;
     }
 
-    const authorRank = await getOrCreateRanking(authorUserId, guildId);
     const receiverRank = await getOrCreateRanking(receiverUserId, guildId);
 
-    if (!authorRank || !receiverRank) {
+    if (!receiverRank) {
+      logger.warn('Cannot get receiver');
       return;
     }
 
-    if (authorRank.experience < amount) {
-      message.reply(`Cannot gift ${amount} exp, you only have ${authorRank.experience}`);
-      return;
-    }
-
-    authorRank.removeExperience(amount);
-    await authorRank.save();
-
-    receiverRank.addExperience(amount);
+    receiverRank.setLevel(level);
     await receiverRank.save();
 
-    message.channel.send(`<@${authorUserId}> gifted ${amount} EXP to <@${receiverUserId}>.`);
+    message.channel.send(`<@${authorUserId}> set <@${receiverUserId}>'s level to ${level}.`);
   },
 };
 
-export default GiftExpCommand;
+export default SetLevelCommand;

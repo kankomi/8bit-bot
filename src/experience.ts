@@ -38,9 +38,13 @@ export function getLevelForExp(exp: number): number {
 }
 
 export function getExpForLevel(level: number): number {
+  if (level - 1 < 0) {
+    return LEVELS[0];
+  }
+
   if (level - 1 > LEVELS.length) {
     return LEVELS[LEVELS.length - 1];
   }
 
-  return LEVELS[level];
+  return LEVELS[level - 1];
 }

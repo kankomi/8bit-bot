@@ -23,12 +23,13 @@ async function getOrCreateRanking(userId: string, guildId: string): Promise<Rank
   return ranking;
 }
 
-const GiftExpCommand: Command = {
-  name: 'gift',
+const GiveExpCommand: Command = {
+  name: 'give',
   usage: '[@user] [amount]',
   cooldown: 0,
   args: true,
-  description: 'Gifts [amount] exp to [@user]',
+  permission: 'MANAGE_CHANNELS',
+  description: 'Give [amount] exp to [@user]',
   async execute(message: Message, args: string[]) {
     if (message.author.bot) {
       return;
@@ -51,8 +52,8 @@ const GiftExpCommand: Command = {
       return;
     }
 
-    const receiverUserId = message.mentions.users.first()?.id;
     const authorUserId = message.author.id;
+    const receiverUserId = message.mentions.users.first()?.id;
     const guildId = message.guild.id;
 
     if (!receiverUserId) {
@@ -60,26 +61,18 @@ const GiftExpCommand: Command = {
       return;
     }
 
-    const authorRank = await getOrCreateRanking(authorUserId, guildId);
     const receiverRank = await getOrCreateRanking(receiverUserId, guildId);
 
-    if (!authorRank || !receiverRank) {
+    if (!receiverRank) {
+      logger.warn('Cannot get receiver');
       return;
     }
-
-    if (authorRank.experience < amount) {
-      message.reply(`Cannot gift ${amount} exp, you only have ${authorRank.experience}`);
-      return;
-    }
-
-    authorRank.removeExperience(amount);
-    await authorRank.save();
 
     receiverRank.addExperience(amount);
     await receiverRank.save();
 
-    message.channel.send(`<@${authorUserId}> gifted ${amount} EXP to <@${receiverUserId}>.`);
+    message.channel.send(`<@${authorUserId}> gave ${amount} EXP to <@${receiverUserId}>.`);
   },
 };
 
-export default GiftExpCommand;
+export default GiveExpCommand;
