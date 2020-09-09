@@ -1,9 +1,10 @@
 import { Client, Presence, TextChannel } from 'discord.js';
 import logger from '../logging';
 import EventHandlerInterface from './EventHandlerInterface';
+import TimeoutCache from '../TimeoutCache';
 
 export default class ToeHandler extends EventHandlerInterface {
-  messageTimestampCache: { [userId: string]: number } = {};
+  messageTimestampCache = new TimeoutCache(6 * 60);
   constructor(client: Client) {
     super(client);
     this.name = 'streaming';
@@ -19,6 +20,10 @@ export default class ToeHandler extends EventHandlerInterface {
       return;
     }
 
+    if (!this.messageTimestampCache.isExpired(presence.userID)) {
+      return;
+    }
+
     logger.info(`found streaming activity ${streamingActivity} with url ${streamingActivity.url}`);
 
     if (streamingActivity.url !== null && presence.guild !== null) {
@@ -30,6 +35,9 @@ export default class ToeHandler extends EventHandlerInterface {
         (channel as TextChannel).send(
           `${presence.user?.username} is streaming!\nCheck it out at ${streamingActivity.url}`
         );
+
+        // set cooldown for this user
+        this.messageTimestampCache.set(presence.userID);
 
         logger.info(
           `Posted streaming activity from user ${presence.user?.username} to guild ${presence.guild} in channel ${channel.name}.`
