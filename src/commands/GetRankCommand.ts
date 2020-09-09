@@ -1,8 +1,8 @@
 import { Message } from 'discord.js';
-import { Command } from '../types';
 import Ranking from '../db/models/Ranking';
+import { getExpForLevel } from '../experience';
 import logger from '../logging';
-import { LEVELS } from '../eventhandler/ExpHandler';
+import { Command } from '../types';
 import { getUserFromMention } from '../utils';
 
 const RankingCommand: Command = {
@@ -43,16 +43,14 @@ const RankingCommand: Command = {
       });
 
       if (rank === null) {
-        logger.error(
-          `Could not create ranking for user ${userId} in guild ${guildId}`
-        );
+        logger.error(`Could not create ranking for user ${userId} in guild ${guildId}`);
       }
     }
 
     message.channel.send(
-      `<@${userId}> is level ${rank.level}, EXP ${rank.experience}/${
-        LEVELS[rank.level + 1]
-      }`
+      `<@${userId}> is level ${rank.level}, EXP ${rank.experience}/${getExpForLevel(
+        rank.level + 1
+      )}`
     );
   },
 };

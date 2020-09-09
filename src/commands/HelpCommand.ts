@@ -28,7 +28,7 @@ const HelpCommand: Command = {
 \`\`\`
 `;
     for (const cmd of commands) {
-      helpStr += `${prefix}${cmd.usage}        - ${cmd.description}\n`;
+      helpStr += `${prefix}${cmd.name} ${cmd.usage}        - ${cmd.description}\n`;
     }
 
     helpStr += '```';

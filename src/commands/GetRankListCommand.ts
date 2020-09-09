@@ -34,10 +34,9 @@ const RankingCommand: Command = {
     let str = '';
 
     for (let i = 0; i < Math.min(rankings.length, 10); i++) {
-      const username = message.guild.members.cache.get(rankings[i].userId)?.user
-        .username;
+      const username = message.guild.members.cache.get(rankings[i].userId)?.user.username;
       const rank = rankings[i];
-      str += `${i + 1}: ${username} - Level ${rank.level} \n`;
+      str += `${i + 1}: ${username} - Level ${rank.level} (${rank.experience} EXP) \n`;
     }
 
     message.channel.send(`\`\`\`${str}\`\`\``);

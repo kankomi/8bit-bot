@@ -11,45 +11,13 @@ import Ranking from '../db/models/Ranking';
 import logger from '../logging';
 import TimeoutCache from '../TimeoutCache';
 import EventHandlerInterface from './EventHandlerInterface';
-
-const MAX_LEVEL = 100;
-const MAX_LEVEL_EXP = 100000000;
-const FIRST_LEVEL_EXP = 1000;
-
-// experience gained
-const MESSAGE_EXP = 10;
-const VOICE_PER_M_EXP = 1;
-const GIVE_REACTION_EXP = 5;
-const RECEIVE_REACTION_EXP = 10;
-
-const B = Math.log(MAX_LEVEL_EXP / FIRST_LEVEL_EXP) / (MAX_LEVEL - 1);
-const A = FIRST_LEVEL_EXP / (Math.exp(B) - 1);
-
-function calculateExpForLevel(level: number): number {
-  const x = Math.round(A * Math.exp(B * (level - 1)));
-  const y = Math.round(A * Math.exp(B * level));
-
-  return y - x - FIRST_LEVEL_EXP;
-}
-
-function allLevels() {
-  const lvls = [];
-  for (let i = 1; i <= MAX_LEVEL; i++) {
-    lvls.push(calculateExpForLevel(i));
-  }
-  return lvls;
-}
-
-export const LEVELS = allLevels();
-
-function getLevelForExp(exp: number): number {
-  for (let i = 0; i < LEVELS.length; i++) {
-    if (LEVELS[i] > exp) {
-      return i;
-    }
-  }
-  return MAX_LEVEL;
-}
+import {
+  MESSAGE_EXP,
+  VOICE_PER_M_EXP,
+  RECEIVE_REACTION_EXP,
+  GIVE_REACTION_EXP,
+  getLevelForExp,
+} from '../experience';
 
 export default class ExpHandler extends EventHandlerInterface {
   messageCooldowns = new TimeoutCache(5);
