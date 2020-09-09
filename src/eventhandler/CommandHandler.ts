@@ -44,6 +44,15 @@ export default class CommandHandler extends EventHandlerInterface {
     }
 
     const command = this.commands.get(cmd) as Command;
+    if (command.permission) {
+      const member = message.guild?.members.cache.get(message.author.id);
+      if (member) {
+        if (!member.permissions.has(command.permission)) {
+          message.reply('you do not have the permissions to execute this command');
+          return;
+        }
+      }
+    }
 
     if (!this.checkArguments(message, command, args) || !this.checkCooldown(message, command)) {
       return;
@@ -54,7 +63,9 @@ export default class CommandHandler extends EventHandlerInterface {
 
   checkArguments(message: Message, command: Command, args: string[]): Boolean {
     if (command.args && args.length === 0) {
-      message.reply(`command arguments are missing, usage is \`${prefix}${command.name} ${command.usage}`);
+      message.reply(
+        `command arguments are missing, usage is \`${prefix}${command.name} ${command.usage}`
+      );
 
       return false;
     }
@@ -77,7 +88,11 @@ export default class CommandHandler extends EventHandlerInterface {
       if (now < expirationTime) {
         const timeLeft = (expirationTime - now) / 1000;
 
-        message.reply(`please wait ${timeLeft.toFixed(0)} more second(s) before using \`${command.name}\` again.`);
+        message.reply(
+          `please wait ${timeLeft.toFixed(0)} more second(s) before using \`${
+            command.name
+          }\` again.`
+        );
 
         return false;
       }

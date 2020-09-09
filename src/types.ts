@@ -1,4 +1,4 @@
-import { Client, Message } from 'discord.js';
+import { BitFieldResolvable, Client, Message, PermissionString } from 'discord.js';
 
 export type ListenerConfig = {
   description?: string;
@@ -11,5 +11,6 @@ export type Command = {
   description: string;
   args: boolean;
   cooldown: number;
+  permission?: BitFieldResolvable<PermissionString>;
   execute(message: Message, args: string[]): any;
 };
