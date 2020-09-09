@@ -3,7 +3,6 @@ import Ranking from '../db/models/Ranking';
 import { getExpForLevel } from '../experience';
 import logger from '../logging';
 import { Command } from '../types';
-import { getUserFromMention } from '../utils';
 
 const RankingCommand: Command = {
   name: 'rank',
@@ -22,14 +21,16 @@ const RankingCommand: Command = {
     }
 
     let userId = message.author.id;
+    let { username } = message.author;
     const guildId = message.guild.id;
     if (args.length > 0) {
-      const user = getUserFromMention(message.client, args[0]);
+      const user = message.mentions.members?.first()?.user;
       if (!user) {
         message.channel.send(`Cannot find user ${args[0]}`);
         return;
       }
       userId = user.id;
+      username = user.username;
     }
 
     let rank = await Ranking.findOne({
@@ -48,9 +49,9 @@ const RankingCommand: Command = {
     }
 
     message.channel.send(
-      `<@${userId}> is level ${rank.level}, EXP ${rank.experience}/${getExpForLevel(
-        rank.level + 1
-      )}`
+      `\`${username} is level ${rank.level} with ${
+        rank.experience
+      } EXP. EXP needed for next level: ${getExpForLevel(rank.level + 1)}.\``
     );
   },
 };
