@@ -7,7 +7,9 @@ import { getUserFromMention } from '../utils';
 
 const RankingCommand: Command = {
   name: 'rank',
-  usage: 'rank [@user]',
+  usage: '[@user]',
+  cooldown: 0,
+  args: false,
   description: 'Shows the rank of a user',
   async execute(message: Message, args: string[]) {
     if (message.author.bot) {

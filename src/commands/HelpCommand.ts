@@ -18,6 +18,8 @@ async function loadCommands(): Promise<Command[]> {
 const HelpCommand: Command = {
   name: 'help',
   usage: 'help',
+  args: false,
+  cooldown: 0,
   description: 'Shows this help',
   async execute(message: Message) {
     const commands = await loadCommands();

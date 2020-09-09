@@ -6,6 +6,8 @@ import { Command } from '../types';
 const RankingCommand: Command = {
   name: 'rankings',
   usage: 'rankings',
+  args: false,
+  cooldown: 0,
   description: 'Shows top 10 rank list',
   async execute(message: Message) {
     if (message.author.bot) {

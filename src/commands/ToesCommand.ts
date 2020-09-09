@@ -5,7 +5,9 @@ import { getUserFromMention } from '../utils';
 
 const ToesCommand: Command = {
   name: 'toes',
-  usage: 'toes @user',
+  usage: '@user',
+  args: true,
+  cooldown: 10,
   description: 'Shows how many times @user mentioned toes',
 
   async execute(message: Message, args: string[]) {

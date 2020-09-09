@@ -9,5 +9,7 @@ export type Command = {
   name: string;
   usage: string;
   description: string;
+  args: boolean;
+  cooldown: number;
   execute(message: Message, args: string[]): any;
 };
