@@ -14,7 +14,7 @@ export function init(sequelize: Sequelize) {
         primaryKey: true,
       },
       count: {
-        type: DataTypes.DECIMAL,
+        type: DataTypes.FLOAT,
         allowNull: false,
       },
     },
