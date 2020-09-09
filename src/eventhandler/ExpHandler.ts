@@ -62,26 +62,43 @@ export default class ExpHandler extends EventHandlerInterface {
         } exp gain is on cooldown for ${this.messageCooldowns.timeToExpired(userId)} seconds.`
       );
 
+      // reset cooldown timer
+      this.messageCooldowns.set(userId, message.createdTimestamp);
+
       return;
     }
 
     this.messageCooldowns.set(userId, message.createdTimestamp);
 
     await this.giveExp(userId, guildId, MESSAGE_EXP);
+    logger.info(`${message.author.username} gained ${MESSAGE_EXP} exp for writing a message.`);
   }
 
   onVoiceStateUpdate(oldState: VoiceState, newState: VoiceState) {
     const userId = newState.member?.user.id;
     const guildId = newState.guild.id;
+    const username = newState.member?.user.username;
 
     if (!userId) {
       logger.warn('Cannot get userId in onVoiceStateUpdate');
       return;
     }
 
-    // user just switched channels, nothing to do
     if (oldState.channelID && newState.channelID) {
-      return;
+      // back from AFK channel
+      if (!oldState.channel?.speakable && newState.channel?.speakable) {
+        this.inVoiceChatTimestamps.set(userId, Date.now());
+        return;
+      }
+
+      // moved to AFK channel
+      if (oldState.channel?.speakable && !newState.channel?.speakable) {
+        // reward for active time
+        this.rewardUserForTimeInVc(userId, guildId, username);
+      } else {
+        // user just switched channels, nothing to do
+        return;
+      }
     }
 
     // user entered a channel
@@ -91,23 +108,25 @@ export default class ExpHandler extends EventHandlerInterface {
 
     // user left a channel
     if (oldState.channelID && !newState.channelID) {
-      const enteredTimestamp = this.inVoiceChatTimestamps.get(userId);
-      if (!enteredTimestamp) {
-        logger.warn(`Cannot get enteredTimestamp for user ${userId}`);
-        return;
-      }
-      this.inVoiceChatTimestamps.delete(userId);
+      this.rewardUserForTimeInVc(userId, guildId, username);
+    }
+  }
 
-      const minutesinVc = (Date.now() - enteredTimestamp) / (1000 * 60);
-      const exp = Math.round(minutesinVc * VOICE_PER_M_EXP);
+  async rewardUserForTimeInVc(userId: string, guildId: string, username?: string) {
+    const enteredTimestamp = this.inVoiceChatTimestamps.get(userId);
+    if (!enteredTimestamp) {
+      logger.warn(`Cannot get enteredTimestamp for user ${userId}`);
+      return;
+    }
+    this.inVoiceChatTimestamps.delete(userId);
 
-      if (exp > 0) {
-        this.giveExp(userId, guildId, exp);
+    const minutesinVc = (Date.now() - enteredTimestamp) / (1000 * 60);
+    const exp = Math.round(minutesinVc * VOICE_PER_M_EXP);
 
-        logger.info(
-          `${newState.member?.user.username} gained ${exp} exp for being in VC for ${minutesinVc} minutes.`
-        );
-      }
+    if (exp > 0) {
+      this.giveExp(userId, guildId, exp);
+
+      logger.info(`${username} gained ${exp} exp for being in VC for ${minutesinVc} minutes.`);
     }
   }
 
