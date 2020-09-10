@@ -38,12 +38,13 @@ export default class CommandHandler extends EventHandlerInterface {
     const messageContent = message.content.replace(/\s+/, ' ').trim();
     const [cmd, ...args] = messageContent.substring(prefix.length).split(' ');
 
-    if (!this.commands.has(cmd)) {
+    const command = this.commands.find((c) => c.name === cmd || !!c.aliases?.includes(cmd));
+
+    if (!command) {
       message.reply(`command '${cmd}' does not exist!`);
       return;
     }
 
-    const command = this.commands.get(cmd) as Command;
     if (command.permission) {
       const member = message.guild?.members.cache.get(message.author.id);
       if (member) {
@@ -58,7 +59,7 @@ export default class CommandHandler extends EventHandlerInterface {
       return;
     }
 
-    this.commands.get(cmd)?.execute(message, args);
+    command.execute(message, args);
   }
 
   checkArguments(message: Message, command: Command, args: string[]): Boolean {

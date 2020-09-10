@@ -3,10 +3,11 @@ import Ranking from '../db/models/Ranking';
 import { getExpForLevel } from '../experience';
 import logger from '../logging';
 import { Command } from '../types';
+import { prefix } from '../config.json';
 
 const RankingCommand: Command = {
   name: 'rank',
-  usage: '[@user]',
+  usage: `${prefix}rank [@user]`,
   cooldown: 0,
   args: false,
   description: 'Shows the rank of a user',

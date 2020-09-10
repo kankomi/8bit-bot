@@ -1,22 +1,26 @@
 import { Message } from 'discord.js';
 import ToeCounter from '../db/models/ToeCounter';
 import { Command } from '../types';
-import { getUserFromMention } from '../utils';
+import { prefix } from '../config.json';
 
 const ToesCommand: Command = {
   name: 'toes',
-  usage: '@user',
-  args: true,
+  usage: `${prefix}toes [@user](optional)`,
+  args: false,
   cooldown: 10,
   description: 'Shows how many times @user mentioned toes',
 
   async execute(message: Message, args: string[]) {
-    const [userMention] = args;
+    let user = message.author;
 
-    const user = getUserFromMention(message.client, userMention);
-    if (!user) {
-      message.channel.send(`cannot find user ${userMention}`);
-      return;
+    if (args.length > 0) {
+      const mentionedUser = message.mentions.users.first();
+
+      if (!mentionedUser) {
+        message.reply(`Cannot find user \`${args[0]}\``);
+        return;
+      }
+      user = mentionedUser;
     }
 
     const result = await ToeCounter.findOne({ where: { userId: user.id } });
@@ -24,9 +28,7 @@ const ToesCommand: Command = {
     if (!result) {
       message.channel.send(`${user.username} didn't mention toes even once!`);
     } else {
-      message.channel.send(
-        `${user.username} mentioned toes ${result.count} times!`
-      );
+      message.channel.send(`${user.username} mentioned toes ${result.count} times!`);
     }
   },
 };

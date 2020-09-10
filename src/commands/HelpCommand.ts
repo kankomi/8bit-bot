@@ -26,7 +26,7 @@ function buildHelpString(commands: Command[], padding: number = 3) {
   }
 
   longestName += padding;
-  longestUsage += padding + prefix.length;
+  longestUsage += padding;
   longestAliases += padding;
 
   // build header
@@ -39,7 +39,7 @@ function buildHelpString(commands: Command[], padding: number = 3) {
   const buildLine = (cmd: string, aliases: string, usage: string, description: string) => {
     let out = '';
     out += `${cmd}${' '.repeat(longestName - cmd.length)}`;
-    out += `${prefix}${usage}${' '.repeat(longestUsage - usage.length - prefix.length)}`;
+    out += `${usage}${' '.repeat(longestUsage - usage.length)}`;
     out += `${aliases}${' '.repeat(longestAliases - aliases.length)}`;
     out += `${description}`;
     return out;
@@ -56,7 +56,7 @@ function buildHelpString(commands: Command[], padding: number = 3) {
 
 const HelpCommand: Command = {
   name: 'help',
-  usage: 'help',
+  usage: `${prefix}help`,
   args: false,
   cooldown: 0,
   description: 'Shows this help',

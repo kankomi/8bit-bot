@@ -2,6 +2,7 @@ import { Message } from 'discord.js';
 import Ranking from '../db/models/Ranking';
 import logger from '../logging';
 import { Command } from '../types';
+import { prefix } from '../config.json';
 
 async function getOrCreateRanking(userId: string, guildId: string): Promise<Ranking | undefined> {
   let ranking = await Ranking.findOne({
@@ -25,7 +26,7 @@ async function getOrCreateRanking(userId: string, guildId: string): Promise<Rank
 
 const GiftExpCommand: Command = {
   name: 'gift',
-  usage: '[@user] [amount]',
+  usage: `${prefix}gift [@user] [amount]`,
   cooldown: 0,
   args: true,
   description: 'Gifts [amount] exp to [@user]',

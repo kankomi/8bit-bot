@@ -2,10 +2,12 @@ import { Message } from 'discord.js';
 import Ranking from '../db/models/Ranking';
 import logger from '../logging';
 import { Command } from '../types';
+import { prefix } from '../config.json';
 
 const RankingCommand: Command = {
-  name: 'rankings',
-  usage: 'rankings',
+  name: 'ranking',
+  usage: `${prefix}ranking`,
+  aliases: ['ranks', 'rankings'],
   args: false,
   cooldown: 0,
   description: 'Shows top 10 rank list',
