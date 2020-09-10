@@ -7,7 +7,8 @@ import logger from '../utils/logging';
 
 const RankingCommand: Command = {
   name: 'rank',
-  usage: `${prefix}rank [@user]`,
+  usage: `${prefix}rank [@user](optional)`,
+  aliases: ['r'],
   cooldown: 0,
   args: false,
   description: 'Shows the rank of a user',

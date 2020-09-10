@@ -51,6 +51,10 @@ const RankingCommand: Command = {
     await rank.save();
 
     await message.channel.send(`${message.author.username} upvoted ${user.username}!`);
+
+    logger.info(
+      `${message.author.username} upvoted ${user.username} with ${experience.UPVOTE_EXP} exp`
+    );
     return true;
   },
 };
