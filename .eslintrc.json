@@ -23,6 +23,7 @@
     "no-plusplus": "off",
     "class-methods-use-this": "off",
     "no-underscore-dangle": "off",
-    "no-restricted-globals": "off"
+    "no-restricted-globals": "off",
+    "implicit-arrow-linebreak": "off"
   }
 }
