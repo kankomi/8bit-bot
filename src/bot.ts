@@ -17,6 +17,7 @@ function setupClient(client: Discord.Client): void {
       logger.info(
         `Client ready; logged in as ${client.user?.username}#${client.user?.discriminator} (${client.user?.id})`
       );
+      client.user?.setActivity('!!help - Gimme toes!', { type: 'PLAYING' });
     })
     .on('disconnect', () => {
       logger.warn('Disconnected!');
