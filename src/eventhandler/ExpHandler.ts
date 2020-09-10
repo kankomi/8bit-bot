@@ -14,9 +14,9 @@ import {
   MESSAGE_EXP,
   RECEIVE_REACTION_EXP,
   VOICE_PER_M_EXP,
-} from '../experience';
-import logger from '../logging';
-import TimeoutCache from '../TimeoutCache';
+} from '../utils/experience';
+import logger from '../utils/logging';
+import TimeoutCache from '../utils/TimeoutCache';
 import EventHandlerInterface from './EventHandlerInterface';
 
 export default class ExpHandler extends EventHandlerInterface {

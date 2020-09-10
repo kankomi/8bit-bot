@@ -2,7 +2,7 @@ import { Client, Collection, Message } from 'discord.js';
 import fs from 'fs';
 import { Command } from '../types';
 import EventHandlerInterface from './EventHandlerInterface';
-import logger from '../logging';
+import logger from '../utils/logging';
 import { prefix } from '../config.json';
 
 export default class CommandHandler extends EventHandlerInterface {

@@ -2,7 +2,7 @@ import Discord from 'discord.js';
 import dotenv from 'dotenv';
 import { initializeDb } from './db';
 import EventHandlerFactory from './eventhandler/EventHandlerFactory';
-import logger from './logging';
+import logger from './utils/logging';
 
 dotenv.config();
 

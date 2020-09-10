@@ -1,6 +1,6 @@
 import { Message } from 'discord.js';
 import Ranking from '../db/models/Ranking';
-import logger from '../logging';
+import logger from '../utils/logging';
 import { Command } from '../types';
 import { prefix } from '../config.json';
 

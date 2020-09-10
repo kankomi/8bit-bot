@@ -1,7 +1,7 @@
 import { Message } from 'discord.js';
 import Ranking from '../db/models/Ranking';
-import { getExpForLevel } from '../experience';
-import logger from '../logging';
+import { getExpForLevel } from '../utils/experience';
+import logger from '../utils/logging';
 import { Command } from '../types';
 import { prefix } from '../config.json';
 

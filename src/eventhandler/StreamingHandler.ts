@@ -1,7 +1,7 @@
 import { Client, Presence, TextChannel } from 'discord.js';
-import logger from '../logging';
+import logger from '../utils/logging';
 import EventHandlerInterface from './EventHandlerInterface';
-import TimeoutCache from '../TimeoutCache';
+import TimeoutCache from '../utils/TimeoutCache';
 
 export default class ToeHandler extends EventHandlerInterface {
   messageTimestampCache = new TimeoutCache(6 * 60);

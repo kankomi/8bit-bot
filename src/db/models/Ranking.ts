@@ -1,6 +1,6 @@
 import { DataTypes, Sequelize } from 'sequelize';
 import UserModel from './UserModel';
-import { getLevelForExp, getExpForLevel } from '../../experience';
+import { getLevelForExp, getExpForLevel } from '../../utils/experience';
 
 class Ranking extends UserModel {
   experience!: number;
