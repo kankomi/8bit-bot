@@ -72,6 +72,7 @@ const HelpCommand: Command = {
     helpStr += '```';
 
     message.channel.send(helpStr);
+    return true;
   },
 };
 

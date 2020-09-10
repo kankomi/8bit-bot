@@ -18,7 +18,7 @@ const ToesCommand: Command = {
 
       if (!mentionedUser) {
         message.reply(`Cannot find user \`${args[0]}\``);
-        return;
+        return false;
       }
       user = mentionedUser;
     }
@@ -26,10 +26,12 @@ const ToesCommand: Command = {
     const result = await ToeCounter.findOne({ where: { userId: user.id } });
 
     if (!result) {
-      message.channel.send(`${user.username} didn't mention toes even once!`);
+      await message.channel.send(`${user.username} didn't mention toes even once!`);
     } else {
-      message.channel.send(`${user.username} mentioned toes ${result.count} times!`);
+      await message.channel.send(`${user.username} mentioned toes ${result.count} times!`);
     }
+
+    return true;
   },
 };
 

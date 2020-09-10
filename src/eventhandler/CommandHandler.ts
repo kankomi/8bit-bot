@@ -30,7 +30,7 @@ export default class CommandHandler extends EventHandlerInterface {
     }
   }
 
-  onMessage(message: Message) {
+  async onMessage(message: Message) {
     if (message.author.bot || !message.content.startsWith(prefix)) {
       return;
     }
@@ -59,13 +59,20 @@ export default class CommandHandler extends EventHandlerInterface {
       return;
     }
 
-    command.execute(message, args);
+    const success = await command.execute(message, args);
+
+    if (success) {
+      const timestamps = this.cooldowns.get(command.name) as Collection<string, number>;
+      timestamps.set(message.author.id, Date.now());
+
+      setTimeout(() => timestamps.delete(message.author.id), command.cooldown * 1000);
+    }
   }
 
   checkArguments(message: Message, command: Command, args: string[]): Boolean {
     if (command.args && args.length === 0) {
       message.reply(
-        `command arguments are missing, usage is \`${prefix}${command.name} ${command.usage}`
+        `command arguments are missing, usage is \`${prefix}${command.name} ${command.usage}\``
       );
 
       return false;
@@ -98,9 +105,6 @@ export default class CommandHandler extends EventHandlerInterface {
         return false;
       }
     }
-
-    timestamps.set(message.author.id, now);
-    setTimeout(() => timestamps.delete(message.author.id), cooldownAmount);
 
     return true;
   }

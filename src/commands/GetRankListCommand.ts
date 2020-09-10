@@ -1,8 +1,8 @@
 import { Message } from 'discord.js';
-import Ranking from '../db/models/Ranking';
-import logger from '../utils/logging';
-import { Command } from '../types';
 import { prefix } from '../config.json';
+import Ranking from '../db/models/Ranking';
+import { Command } from '../types';
+import logger from '../utils/logging';
 
 const RankingCommand: Command = {
   name: 'ranking',
@@ -13,12 +13,12 @@ const RankingCommand: Command = {
   description: 'Shows top 10 rank list',
   async execute(message: Message) {
     if (message.author.bot) {
-      return;
+      return false;
     }
 
     if (message.guild === null) {
       logger.warn('Cannot get guild id!');
-      return;
+      return false;
     }
 
     const guildId = message.guild.id;
@@ -30,7 +30,7 @@ const RankingCommand: Command = {
 
     if (!rankings) {
       message.channel.send('there are no rankings yet.');
-      return;
+      return false;
     }
 
     let str = '';
@@ -41,7 +41,9 @@ const RankingCommand: Command = {
       str += `${i + 1}: ${username} - Level ${rank.level} (${rank.experience} EXP) \n`;
     }
 
-    message.channel.send(`\`\`\`${str}\`\`\``);
+    await message.channel.send(`\`\`\`${str}\`\`\``);
+
+    return true;
   },
 };
 

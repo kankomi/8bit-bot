@@ -1,29 +1,9 @@
 import { Message } from 'discord.js';
+import { prefix } from '../config.json';
 import Ranking from '../db/models/Ranking';
-import logger from '../utils/logging';
 import { Command } from '../types';
 import { MAX_LEVEL } from '../utils/experience';
-import { prefix } from '../config.json';
-
-async function getOrCreateRanking(userId: string, guildId: string): Promise<Ranking | undefined> {
-  let ranking = await Ranking.findOne({
-    where: { userId, guildId },
-  });
-
-  if (!ranking) {
-    ranking = await Ranking.create({
-      userId,
-      guildId,
-    });
-
-    if (ranking === null) {
-      logger.error(`Could not create ranking for user ${userId} in guild ${guildId}`);
-      return undefined;
-    }
-  }
-
-  return ranking;
-}
+import logger from '../utils/logging';
 
 const SetLevelCommand: Command = {
   name: 'setlevel',
@@ -35,17 +15,17 @@ const SetLevelCommand: Command = {
   description: 'Set [@user]s level to [level]',
   async execute(message: Message, args: string[]) {
     if (message.author.bot) {
-      return;
+      return false;
     }
 
     if (message.guild === null) {
       logger.warn('Cannot get guild id!');
-      return;
+      return false;
     }
 
     if (args.length < 2) {
       message.reply('need `[user] [level]` as argument');
-      return;
+      return false;
     }
 
     const level = parseInt(args[1], 10);
@@ -54,7 +34,7 @@ const SetLevelCommand: Command = {
       message.reply(
         `${args[1]} is an invalid level, need a positive number between 0 and ${MAX_LEVEL}`
       );
-      return;
+      return false;
     }
 
     const authorUserId = message.author.id;
@@ -63,20 +43,22 @@ const SetLevelCommand: Command = {
 
     if (!receiverUserId) {
       message.channel.send(`Cannot find user ${args[0]}`);
-      return;
+      return false;
     }
 
-    const receiverRank = await getOrCreateRanking(receiverUserId, guildId);
+    const receiverRank = await Ranking.getOrCreateRanking(receiverUserId, guildId);
 
     if (!receiverRank) {
       logger.warn('Cannot get receiver');
-      return;
+      return false;
     }
 
     receiverRank.setLevel(level);
     await receiverRank.save();
 
-    message.channel.send(`<@${authorUserId}> set <@${receiverUserId}>'s level to ${level}.`);
+    await message.channel.send(`<@${authorUserId}> set <@${receiverUserId}>'s level to ${level}.`);
+
+    return true;
   },
 };
 
