@@ -1,23 +1,23 @@
 import {
   Client,
-  Message,
-  VoiceState,
   Collection,
+  Message,
   MessageReaction,
-  User,
   PartialUser,
+  User,
+  VoiceState,
 } from 'discord.js';
 import Ranking from '../db/models/Ranking';
+import {
+  getLevelForExp,
+  GIVE_REACTION_EXP,
+  MESSAGE_EXP,
+  RECEIVE_REACTION_EXP,
+  VOICE_PER_M_EXP,
+} from '../experience';
 import logger from '../logging';
 import TimeoutCache from '../TimeoutCache';
 import EventHandlerInterface from './EventHandlerInterface';
-import {
-  MESSAGE_EXP,
-  VOICE_PER_M_EXP,
-  RECEIVE_REACTION_EXP,
-  GIVE_REACTION_EXP,
-  getLevelForExp,
-} from '../experience';
 
 export default class ExpHandler extends EventHandlerInterface {
   messageCooldowns = new TimeoutCache(5);
@@ -78,6 +78,7 @@ export default class ExpHandler extends EventHandlerInterface {
     const userId = newState.member?.user.id;
     const guildId = newState.guild.id;
     const username = newState.member?.user.username;
+    const guildAfkChannel = newState.guild.afkChannel;
 
     if (!userId) {
       logger.warn('Cannot get userId in onVoiceStateUpdate');
@@ -88,21 +89,28 @@ export default class ExpHandler extends EventHandlerInterface {
       return;
     }
 
-    if (oldState.channelID && newState.channelID) {
+    if (guildAfkChannel !== null) {
       // back from AFK channel
-      if (!oldState.channel?.speakable && newState.channel?.speakable) {
+      if (
+        oldState.channel === guildAfkChannel &&
+        newState.channel !== null &&
+        newState.channel !== guildAfkChannel
+      ) {
         this.inVoiceChatTimestamps.set(userId, Date.now());
         return;
       }
 
       // moved to AFK channel
-      if (oldState.channel?.speakable && !newState.channel?.speakable) {
+      if (oldState.channel && newState.channel === guildAfkChannel) {
         // reward for active time
         this.rewardUserForTimeInVc(userId, guildId, username);
-      } else {
-        // user just switched channels, nothing to do
         return;
       }
+    }
+
+    if (oldState.channelID && newState.channelID) {
+      // user just switched channels, nothing to do
+      return;
     }
 
     // user entered a channel
