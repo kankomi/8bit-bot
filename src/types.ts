@@ -11,6 +11,7 @@ export type Command = {
   description: string;
   args: boolean;
   cooldown: number;
+  aliases?: string[];
   permission?: BitFieldResolvable<PermissionString>;
   execute(message: Message, args: string[]): any;
 };

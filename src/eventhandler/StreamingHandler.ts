@@ -32,7 +32,7 @@ export default class ToeHandler extends EventHandlerInterface {
       );
 
       if (channel && channel.type === 'text') {
-        (channel as TextChannel).send(
+        await (channel as TextChannel).send(
           `${presence.user?.username} is streaming!\nCheck it out at ${streamingActivity.url}`
         );
 
