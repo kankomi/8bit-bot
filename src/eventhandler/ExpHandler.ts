@@ -8,16 +8,11 @@ import {
   VoiceState,
 } from 'discord.js';
 import Ranking from '../db/models/Ranking';
-import {
-  getLevelForExp,
-  GIVE_REACTION_EXP,
-  MESSAGE_EXP,
-  RECEIVE_REACTION_EXP,
-  VOICE_PER_M_EXP,
-} from '../utils/experience';
+import { getLevelForExp } from '../utils/experience';
 import logger from '../utils/logging';
 import TimeoutCache from '../utils/TimeoutCache';
 import EventHandlerInterface from './EventHandlerInterface';
+import { experience } from '../config.json';
 
 export default class ExpHandler extends EventHandlerInterface {
   messageCooldowns = new TimeoutCache(5);
@@ -70,8 +65,10 @@ export default class ExpHandler extends EventHandlerInterface {
 
     this.messageCooldowns.set(userId, message.createdTimestamp);
 
-    await this.giveExp(userId, guildId, MESSAGE_EXP);
-    logger.info(`${message.author.username} gained ${MESSAGE_EXP} exp for writing a message.`);
+    await this.giveExp(userId, guildId, experience.MESSAGE_EXP);
+    logger.info(
+      `${message.author.username} gained ${experience.MESSAGE_EXP} exp for writing a message.`
+    );
   }
 
   onVoiceStateUpdate(oldState: VoiceState, newState: VoiceState) {
@@ -133,7 +130,7 @@ export default class ExpHandler extends EventHandlerInterface {
     this.inVoiceChatTimestamps.delete(userId);
 
     const minutesinVc = (Date.now() - enteredTimestamp) / (1000 * 60);
-    const exp = Math.round(minutesinVc * VOICE_PER_M_EXP);
+    const exp = Math.round(minutesinVc * experience.VOICE_PER_M_EXP);
 
     if (exp > 0) {
       this.giveExp(userId, guildId, exp);
@@ -165,15 +162,17 @@ export default class ExpHandler extends EventHandlerInterface {
     }
 
     // always give the receiver exp
-    await this.giveExp(userIdReceived, guildId, RECEIVE_REACTION_EXP);
+    await this.giveExp(userIdReceived, guildId, experience.RECEIVE_REACTION_EXP);
     logger.info(
-      `Giving ${message.author.username} ${RECEIVE_REACTION_EXP} exp for getting a reaction.`
+      `Giving ${message.author.username} ${experience.RECEIVE_REACTION_EXP} exp for getting a reaction.`
     );
 
     // give reaction giver exp on cooldown
     if (this.reactionCooldowns.isExpired(userIdGiven)) {
-      await this.giveExp(userIdGiven, guildId, GIVE_REACTION_EXP);
-      logger.info(`Giving ${user.username} ${GIVE_REACTION_EXP} exp for giving a reaction.`);
+      await this.giveExp(userIdGiven, guildId, experience.GIVE_REACTION_EXP);
+      logger.info(
+        `Giving ${user.username} ${experience.GIVE_REACTION_EXP} exp for giving a reaction.`
+      );
       this.reactionCooldowns.set(userIdGiven);
     }
   }
