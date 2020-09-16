@@ -1,7 +1,8 @@
 import { Client, Presence, TextChannel } from 'discord.js';
+import _ from 'lodash';
 import logger from '../utils/logging';
-import EventHandlerInterface from './EventHandlerInterface';
 import TimeoutCache from '../utils/TimeoutCache';
+import EventHandlerInterface from './EventHandlerInterface';
 
 export default class ToeHandler extends EventHandlerInterface {
   messageTimestampCache = new TimeoutCache(6 * 60);
@@ -9,6 +10,14 @@ export default class ToeHandler extends EventHandlerInterface {
     super(client);
     this.name = 'streaming';
     this.client.on('presenceUpdate', (oldPresence, newPresence) => {
+      const newBitRole = newPresence.member?.roles.cache.find(
+        (r) => r.name.toLowerCase() === 'new-bit'
+      );
+
+      if (newBitRole !== undefined || _.isEqual(oldPresence?.activities, newPresence.activities)) {
+        return;
+      }
+
       this.onPresenceUpdate(newPresence);
     });
   }
