@@ -44,7 +44,7 @@ export default class StreamHandler {
     if (q) {
       q.playing = false;
       q.songs = [];
-      q.connection.dispatcher.end();
+      q.connection.dispatcher?.end();
     }
   }
 
@@ -56,27 +56,14 @@ export default class StreamHandler {
     }
   }
 
-  static playNextSong(guildId: string) {
+  static skip(guildId: string) {
     const q = this.serverQueue.get(guildId);
+
     if (!q) {
       return;
     }
 
-    if (q.songs.length === 0) {
-      q.voiceChannel.leave();
-    }
-
-    if (!q.playing) {
-      this.play(guildId);
-    } else {
-      q.songs.shift();
-      if (q.songs.length === 0) {
-        q.voiceChannel.leave();
-        return;
-      }
-
-      this.play(guildId);
-    }
+    q.connection.dispatcher.end();
   }
 
   static getSongQueue(guildId: string): Song[] {
@@ -85,23 +72,38 @@ export default class StreamHandler {
     return songs !== undefined ? songs : [];
   }
 
-  private static async play(guildId: string) {
+  static async play(guildId: string) {
     const queue = this.serverQueue.get(guildId);
-    if (!queue || queue.songs.length === 0) {
+
+    if (!queue) {
       return;
     }
+
+    if (queue.songs.length === 0) {
+      queue.connection.dispatcher?.end();
+      queue.playing = false;
+      return;
+    }
+
     const stream = ytdl(queue.songs[0].url, {
       quality: 'highestaudio',
       highWaterMark: 1 << 25,
       filter: 'audioonly',
     });
+
     const dispatch = queue.connection.play(stream);
     queue.playing = true;
 
     logger.info(`Playing ${queue.songs[0].title} in guild ${guildId}`);
+
     dispatch
       .on('finish', () => {
-        this.playNextSong(guildId);
+        queue.songs.shift();
+        if (queue.songs.length > 0) {
+          this.play(guildId);
+        } else {
+          queue.playing = false;
+        }
       })
       .on('error', (err) => logger.error(err));
   }

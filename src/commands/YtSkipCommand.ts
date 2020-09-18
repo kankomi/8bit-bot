@@ -30,7 +30,7 @@ const YtSkipCommand: Command = {
       message.reply('please choin a voice channel first');
       return false;
     }
-    StreamHandler.playNextSong(message.guild.id);
+    StreamHandler.skip(message.guild.id);
 
     return true;
   },

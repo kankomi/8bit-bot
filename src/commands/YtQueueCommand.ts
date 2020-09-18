@@ -4,7 +4,7 @@ import { Command } from '../types';
 import logger from '../utils/logging';
 import StreamHandler from '../youtube-stream/StreamHandler';
 
-const YtStopCommand: Command = {
+const YtQueueCommand: Command = {
   name: 'queue',
   usage: `${prefix}queue`,
   aliases: ['q'],
@@ -31,17 +31,24 @@ const YtStopCommand: Command = {
       message.reply('please choin a voice channel first');
       return false;
     }
-    const queue = StreamHandler.getSongQueue(message.guild.id);
-    let str = '```';
+    const queue = StreamHandler.getServerQueue(message.guild.id);
 
-    if (queue.length === 0) {
+    if (!queue) {
       message.channel.send('No songs queued.');
       return true;
     }
 
-    for (let i = 1; i <= queue.length; i++) {
-      const { title } = queue[i - 1];
-      str += `\n${i} - ${title}`;
+    const { songs } = queue;
+    let str = '```';
+
+    if (songs.length === 0) {
+      message.channel.send('No songs queued.');
+      return true;
+    }
+
+    for (let i = 1; i <= songs.length; i++) {
+      const { title } = songs[i - 1];
+      str += `\n${i} - ${title} ${queue.playing && i === 1 ? '(Playing...)' : ''}`;
     }
     str += '\n```';
 
@@ -50,4 +57,4 @@ const YtStopCommand: Command = {
   },
 };
 
-export default YtStopCommand;
+export default YtQueueCommand;

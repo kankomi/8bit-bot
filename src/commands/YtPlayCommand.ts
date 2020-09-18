@@ -45,9 +45,12 @@ const YtPlayCommand: Command = {
         voiceChannel,
         connection
       );
-      StreamHandler.addSong(message.guild.id, url);
+
+      queue.connection = connection;
+
+      await StreamHandler.addSong(message.guild.id, url);
       if (!queue.playing) {
-        StreamHandler.playNextSong(message.guild.id);
+        StreamHandler.play(message.guild.id);
       }
     } catch (ex) {
       logger.error(`Cannot play "${url}": ${ex}`);
