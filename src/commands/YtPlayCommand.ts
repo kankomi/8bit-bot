@@ -1,8 +1,33 @@
 import { Message } from 'discord.js';
+import search from 'youtube-search';
 import { prefix } from '../config.json';
 import { Command } from '../types';
 import logger from '../utils/logging';
 import StreamHandler from '../youtube-stream/StreamHandler';
+
+async function searchYt(
+  term: string,
+  opts: search.YouTubeSearchOptions
+): Promise<search.YouTubeSearchResults[] | undefined> {
+  return new Promise((resolve, reject) => {
+    search(term, { key: process.env.YT_KEY, ...opts }, (err, results) => {
+      if (err) reject(err);
+
+      resolve(results);
+    });
+  });
+}
+
+async function findSong(searchTerm: string): Promise<string | undefined> {
+  const results = await searchYt(searchTerm, { maxResults: 5, type: 'video' });
+
+  if (results) {
+    logger.info(JSON.stringify(results));
+    return results[0].link;
+  }
+
+  return undefined;
+}
 
 const YtPlayCommand: Command = {
   name: 'play',
@@ -47,8 +72,13 @@ const YtPlayCommand: Command = {
       );
 
       queue.connection = connection;
+      const songUrl = await findSong(url);
+      if (!songUrl) {
+        message.channel.send(`Cannot find ${url}`);
+        return false;
+      }
 
-      await StreamHandler.addSong(message.guild.id, url);
+      await StreamHandler.addSong(message.guild.id, songUrl);
       if (!queue.playing) {
         StreamHandler.play(message.guild.id);
       } else {
@@ -56,7 +86,7 @@ const YtPlayCommand: Command = {
       }
     } catch (ex) {
       logger.error(`Cannot play "${url}": ${ex}`);
-      message.reply(`Cannot play "${url}`);
+      message.reply(`Cannot play "${url}"`);
       return false;
     }
 
