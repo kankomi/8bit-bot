@@ -1,10 +1,11 @@
-import { Message } from 'discord.js';
+import { Collection, Message } from 'discord.js';
 import search from 'youtube-search';
 import { prefix } from '../config.json';
 import { Command } from '../types';
 import logger from '../utils/logging';
 import StreamHandler from '../youtube-stream/StreamHandler';
 
+// TODO: move to own file
 async function searchYt(
   term: string,
   opts: search.YouTubeSearchOptions
@@ -18,16 +19,7 @@ async function searchYt(
   });
 }
 
-async function findSong(searchTerm: string): Promise<string | undefined> {
-  const results = await searchYt(searchTerm, { maxResults: 5, type: 'video' });
-
-  if (results) {
-    logger.info(JSON.stringify(results));
-    return results[0].link;
-  }
-
-  return undefined;
-}
+const SearchCache = new Collection<string, search.YouTubeSearchResults[]>();
 
 const YtPlayCommand: Command = {
   name: 'play',
@@ -55,7 +47,7 @@ const YtPlayCommand: Command = {
     }
 
     const voiceChannel = message.member?.voice.channel;
-    const url = args[0];
+    const searchTerm = args[0];
 
     if (!voiceChannel) {
       message.reply('please choin a voice channel first');
@@ -72,21 +64,44 @@ const YtPlayCommand: Command = {
       );
 
       queue.connection = connection;
-      const songUrl = await findSong(url);
-      if (!songUrl) {
-        message.channel.send(`Cannot find ${url}`);
-        return false;
-      }
+      const cacheHit = SearchCache.get(message.guild.id);
+      const num = parseInt(searchTerm, 10);
 
-      await StreamHandler.addSong(message.guild.id, songUrl);
-      if (!queue.playing) {
-        StreamHandler.play(message.guild.id);
+      // check for results in cache
+      if (cacheHit && !isNaN(num)) {
+        if (num < 1 || num > 5) {
+          message.channel.send('Choose a valid number between 1 and 5');
+          return false;
+        }
+
+        await StreamHandler.addSong(message.guild.id, cacheHit[num - 1].link);
+        SearchCache.delete(message.guild.id);
+        if (!queue.playing) {
+          StreamHandler.play(message.guild.id);
+        } else {
+          message.channel.send(`Queueing song at position ${queue.songs.length - 1}`);
+        }
+        // ... or search via yt api
       } else {
-        message.channel.send(`Queueing song at position ${queue.songs.length - 1}`);
+        const results = await searchYt(searchTerm, { maxResults: 5, type: 'video' });
+        if (!results) {
+          message.channel.send(`Cannot find ${searchTerm}`);
+          return false;
+        }
+        SearchCache.set(message.guild.id, results);
+
+        let str = 'Choose result:\n```';
+        for (let i = 0; i < results.length; i++) {
+          const val = results[i];
+          str += `\n${i + 1} - ${val.title}`;
+        }
+        str += '```\n';
+
+        message.channel.send(str);
       }
     } catch (ex) {
-      logger.error(`Cannot play "${url}": ${ex}`);
-      message.reply(`Cannot play "${url}"`);
+      logger.error(`Cannot play "${searchTerm}": ${ex}`);
+      message.reply(`Cannot play "${searchTerm}"`);
       return false;
     }
 
