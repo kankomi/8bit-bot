@@ -51,6 +51,8 @@ const YtPlayCommand: Command = {
       await StreamHandler.addSong(message.guild.id, url);
       if (!queue.playing) {
         StreamHandler.play(message.guild.id);
+      } else {
+        message.channel.send(`Queueing song at position ${queue.songs.length - 1}`);
       }
     } catch (ex) {
       logger.error(`Cannot play "${url}": ${ex}`);

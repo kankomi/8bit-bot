@@ -48,7 +48,7 @@ const YtQueueCommand: Command = {
 
     for (let i = 1; i <= songs.length; i++) {
       const { title } = songs[i - 1];
-      str += `\n${i} - ${title} ${queue.playing && i === 1 ? '(Playing...)' : ''}`;
+      str += `\n${queue.playing && i === 1 ? 'Now playing' : i - 1} - ${title}`;
     }
     str += '\n```';
 
