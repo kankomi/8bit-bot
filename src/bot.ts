@@ -35,7 +35,11 @@ async function main() {
   await EventHandlerFactory.initialize(client);
   await initializeDb();
 
-  client.login(BOT_TOKEN);
+  try {
+    await client.login(BOT_TOKEN);
+  } catch (ex) {
+    logger.error(`Cannot login discord bot: "${ex}", token was ${BOT_TOKEN}`);
+  }
 }
 
 main();
