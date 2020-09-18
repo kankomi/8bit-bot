@@ -47,7 +47,7 @@ const YtPlayCommand: Command = {
     }
 
     const voiceChannel = message.member?.voice.channel;
-    const searchTerm = args[0];
+    const searchTerm = args.join('');
 
     if (!voiceChannel) {
       message.reply('please choin a voice channel first');
