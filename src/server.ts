@@ -33,7 +33,6 @@ class Server {
     });
 
     router.post('/songs/:id', (req, res) => {
-      logger.info(JSON.stringify(req.body));
       const { action } = req.body;
       const guildId = req.params.id;
       if (!guildId) {
@@ -50,6 +49,12 @@ class Server {
       if (action === 'SKIP') {
         logger.info('skipping song');
         StreamHandler.skip(guildId);
+        return res.sendStatus(201);
+      }
+
+      if (action === 'STOP') {
+        logger.info('stopping');
+        StreamHandler.stop(guildId);
         return res.sendStatus(201);
       }
 
