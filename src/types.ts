@@ -19,4 +19,5 @@ export type Command = {
 export type Song = {
   title: string;
   url: string;
+  cover: string;
 };

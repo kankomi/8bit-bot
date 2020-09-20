@@ -5,8 +5,8 @@ import logger from '../utils/logging';
 
 export type ServerQueue = {
   songs: Song[];
-  voiceChannel: VoiceChannel;
   playing: boolean;
+  voiceChannel: VoiceChannel;
   connection: VoiceConnection;
 };
 
@@ -52,7 +52,12 @@ export default class StreamHandler {
     const q = this.serverQueue.get(guildId);
     if (q) {
       const { videoDetails } = await ytdl.getInfo(songUrl);
-      q.songs.push({ url: songUrl, title: videoDetails.title });
+      logger.info(JSON.stringify(videoDetails.thumbnail.thumbnails));
+      q.songs.push({
+        url: songUrl,
+        title: videoDetails.title,
+        cover: videoDetails.thumbnail.thumbnails[videoDetails.thumbnail.thumbnails.length - 1].url,
+      });
     }
   }
 

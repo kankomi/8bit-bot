@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import { initializeDb } from './db';
 import EventHandlerFactory from './eventhandler/EventHandlerFactory';
 import logger from './utils/logging';
+import Server from './server';
 
 dotenv.config();
 
@@ -43,3 +44,4 @@ async function main() {
 }
 
 main();
+Server.start();
