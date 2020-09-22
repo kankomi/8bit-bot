@@ -11,7 +11,11 @@ class Server {
     this.app = express();
     this.app.use(bodyParser.json());
     this.app.use(bodyParser.urlencoded({ extended: true }));
-    this.app.use(cors());
+    this.app.use(
+      cors({
+        origin: ['localhost', 'frontend-8-bit-bot.herokuapp.com'],
+      })
+    );
     this.routes();
   }
 
