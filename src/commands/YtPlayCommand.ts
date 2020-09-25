@@ -1,4 +1,4 @@
-import { Collection, Message } from 'discord.js';
+import { Collection, Message, TextChannel } from 'discord.js';
 import search from 'youtube-search';
 import { prefix } from '../config.json';
 import { Command } from '../types';
@@ -60,6 +60,7 @@ const YtPlayCommand: Command = {
       const queue = StreamHandler.createOrGetServerQueue(
         message.guild.id,
         voiceChannel,
+        message.channel as TextChannel,
         connection
       );
 
@@ -76,10 +77,15 @@ const YtPlayCommand: Command = {
 
         await StreamHandler.addSong(message.guild.id, cacheHit[num - 1].link);
         SearchCache.delete(message.guild.id);
+
         if (!queue.playing) {
           StreamHandler.play(message.guild.id);
         } else {
-          message.channel.send(`Queueing song at position ${queue.songs.length - 1}`);
+          message.channel.send(
+            `Queueing song **${queue.songs[queue.songs.length - 1].title}** at position ${
+              queue.songs.length - 1
+            }`
+          );
         }
         // ... or search via yt api
       } else {

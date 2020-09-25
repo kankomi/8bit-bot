@@ -1,4 +1,10 @@
-import { Collection, VoiceChannel, VoiceConnection } from 'discord.js';
+import {
+  Collection,
+  StreamDispatcher,
+  TextChannel,
+  VoiceChannel,
+  VoiceConnection,
+} from 'discord.js';
 import ytdl from 'ytdl-core';
 import { Song } from '../types';
 import logger from '../utils/logging';
@@ -6,8 +12,10 @@ import logger from '../utils/logging';
 export type ServerQueue = {
   songs: Song[];
   voiceChannel: VoiceChannel;
+  textChannel: TextChannel;
   playing: boolean;
   connection: VoiceConnection;
+  dispatcher?: StreamDispatcher;
 };
 
 export default class StreamHandler {
@@ -20,7 +28,9 @@ export default class StreamHandler {
   static createOrGetServerQueue(
     guildId: string,
     voiceChannel: VoiceChannel,
-    connection: VoiceConnection
+    textChannel: TextChannel,
+    connection: VoiceConnection,
+    dispatcher?: StreamDispatcher
   ): ServerQueue {
     let queue = this.serverQueue.get(guildId);
 
@@ -33,6 +43,8 @@ export default class StreamHandler {
       playing: false,
       connection,
       voiceChannel,
+      textChannel,
+      dispatcher,
     };
     this.serverQueue.set(guildId, queue);
 
@@ -44,7 +56,26 @@ export default class StreamHandler {
     if (q) {
       q.playing = false;
       q.songs = [];
-      q.connection.dispatcher?.end();
+      q.dispatcher?.end();
+      q.voiceChannel.leave();
+    }
+  }
+
+  static async pause(guildId: string) {
+    const q = this.serverQueue.get(guildId);
+    if (q) {
+      q.playing = false;
+      await q.textChannel.send(`Pausing song **${q.songs[0].title}**`);
+      q.dispatcher?.pause();
+    }
+  }
+
+  static async resume(guildId: string) {
+    const q = this.serverQueue.get(guildId);
+    if (q) {
+      q.playing = true;
+      await q.textChannel.send(`Resuming song **${q.songs[0].title}**`);
+      q.dispatcher?.resume();
     }
   }
 
@@ -52,7 +83,12 @@ export default class StreamHandler {
     const q = this.serverQueue.get(guildId);
     if (q) {
       const { videoDetails } = await ytdl.getInfo(songUrl);
-      q.songs.push({ url: songUrl, title: videoDetails.title });
+
+      q.songs.push({
+        url: songUrl,
+        title: videoDetails.title,
+        cover: videoDetails.thumbnail.thumbnails[videoDetails.thumbnail.thumbnails.length - 1].url,
+      });
     }
   }
 
@@ -76,6 +112,7 @@ export default class StreamHandler {
     const queue = this.serverQueue.get(guildId);
 
     if (!queue) {
+      logger.warn(`guildId ${guildId} not in server queue`);
       return;
     }
 
@@ -91,12 +128,14 @@ export default class StreamHandler {
       filter: 'audioonly',
     });
 
-    const dispatch = queue.connection.play(stream);
+    queue.textChannel.send(`Playing song **${queue.songs[0].title}**`);
+    const dispatcher = queue.connection.play(stream);
     queue.playing = true;
+    queue.dispatcher = dispatcher;
 
     logger.info(`Playing ${queue.songs[0].title} in guild ${guildId}`);
 
-    dispatch
+    dispatcher
       .on('finish', () => {
         queue.songs.shift();
         if (queue.songs.length > 0) {
