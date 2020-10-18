@@ -25,6 +25,7 @@
     "no-underscore-dangle": "off",
     "no-restricted-globals": "off",
     "implicit-arrow-linebreak": "off",
-    "no-bitwise": "off"
+    "no-bitwise": "off",
+    "@typescript-eslint/semi": "off"
   }
 }

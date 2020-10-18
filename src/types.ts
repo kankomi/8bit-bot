@@ -21,3 +21,9 @@ export type Song = {
   url: string
   cover: string
 }
+
+export type PlayerState = {
+  isPlaying: boolean
+  songPlaying?: Song
+  songQueue: Song[]
+}

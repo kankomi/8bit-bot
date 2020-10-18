@@ -6,8 +6,10 @@ import {
   VoiceConnection,
 } from 'discord.js'
 import ytdl from 'ytdl-core'
-import { Song } from '../types'
+import apolloClient from '../apollo-client'
+import { PlayerState, Song } from '../types'
 import logger from '../utils/logging'
+import { ADD_SONG_MUTATION, SUBSCRIBE_PLAYER_STATE } from './player-queries'
 
 export type ServerQueue = {
   songs: Song[]
@@ -25,6 +27,34 @@ export default class StreamHandler {
     return this.serverQueue.get(guildId)
   }
 
+  static handleSubscription(guildId: string) {
+    return (data: { playerStateChanged: PlayerState } | null | undefined) => {
+      const state = data?.playerStateChanged
+      const q = this.serverQueue.get(guildId)
+
+      if (!state || !q) {
+        return
+      }
+
+      if (state.songPlaying !== undefined) {
+        if (state.songPlaying.url !== q.songs[0].url) {
+          this.play(guildId, state.songPlaying)
+          logger.info(`playing song ${state.songPlaying.title} now`)
+        }
+
+        q.songs = [state.songPlaying, ...state.songQueue]
+      }
+
+      if (state.isPlaying !== q.playing) {
+        if (state.isPlaying) {
+          this.resume(guildId)
+        } else {
+          this.pause(guildId)
+        }
+      }
+    }
+  }
+
   static createOrGetServerQueue(
     guildId: string,
     voiceChannel: VoiceChannel,
@@ -37,6 +67,19 @@ export default class StreamHandler {
     if (queue) {
       return queue
     }
+
+    logger.info(`subscribing to guid ${guildId}`)
+
+    const state$ = apolloClient.subscribe<{ playerStateChanged: PlayerState }>({
+      query: SUBSCRIBE_PLAYER_STATE,
+      variables: { guildId },
+    })
+
+    // TODO: unsubscribe
+    state$.subscribe(
+      ({ data }) => this.handleSubscription(guildId)(data),
+      (error) => logger.error(error)
+    )
 
     queue = {
       songs: [],
@@ -65,7 +108,7 @@ export default class StreamHandler {
     const q = this.serverQueue.get(guildId)
     if (q) {
       q.playing = false
-      await q.textChannel.send(`Pausing song **${q.songs[0].title}**`)
+      // await q.textChannel.send(`Pausing song **${q.songs[0].title}**`)
       q.dispatcher?.pause()
     }
   }
@@ -74,7 +117,7 @@ export default class StreamHandler {
     const q = this.serverQueue.get(guildId)
     if (q) {
       q.playing = true
-      await q.textChannel.send(`Resuming song **${q.songs[0].title}**`)
+      // await q.textChannel.send(`Resuming song **${q.songs[0].title}**`)
       q.dispatcher?.resume()
     }
   }
@@ -89,6 +132,8 @@ export default class StreamHandler {
         title: videoDetails.title,
         cover: videoDetails.thumbnail.thumbnails[videoDetails.thumbnail.thumbnails.length - 1].url,
       })
+
+      apolloClient.mutate({ mutation: ADD_SONG_MUTATION, variables: { guildId, url: songUrl } })
     }
   }
 
@@ -108,32 +153,34 @@ export default class StreamHandler {
     return songs !== undefined ? songs : []
   }
 
-  static async play(guildId: string) {
+  static async play(guildId: string, song?: Song) {
     const queue = this.serverQueue.get(guildId)
 
     if (!queue) {
       logger.warn(`guildId ${guildId} not in server queue`)
       return
     }
-
-    if (queue.songs.length === 0) {
+    if (queue.songs.length === 0 && song === undefined) {
       queue.connection.dispatcher?.end()
       queue.playing = false
       return
     }
 
-    const stream = ytdl(queue.songs[0].url, {
+    const url = song?.url || queue.songs[0].url
+    const title = song?.title || queue.songs[0].title
+
+    const stream = ytdl(url, {
       quality: 'highestaudio',
       highWaterMark: 1 << 25,
       filter: 'audioonly',
     })
 
-    queue.textChannel.send(`Playing song **${queue.songs[0].title}**`)
+    queue.textChannel.send(`Playing song **${title}**`)
     const dispatcher = queue.connection.play(stream)
     queue.playing = true
     queue.dispatcher = dispatcher
 
-    logger.info(`Playing ${queue.songs[0].title} in guild ${guildId}`)
+    logger.info(`Playing ${title} in guild ${guildId}`)
 
     dispatcher
       .on('finish', () => {
