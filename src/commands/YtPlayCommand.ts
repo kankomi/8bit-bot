@@ -84,7 +84,7 @@ const YtPlayCommand: Command = {
           message.channel.send(
             `Queueing song **${queue.songs[queue.songs.length - 1].title}** at position ${
               queue.songs.length - 1
-            }`
+            }\nCheckout the web player here: ${process.env.FRONTEND_URL}/player/${message.guild.id}`
           )
         }
         // ... or search via yt api

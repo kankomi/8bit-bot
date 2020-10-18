@@ -51,6 +51,7 @@ const YtQueueCommand: Command = {
       str += `\n${queue.playing && i === 1 ? 'Now playing' : i - 1} - ${title}`
     }
     str += '\n```'
+    str += `\nCheckout the web player here: ${process.env.FRONTEND_URL}/player/${message.guild.id}`
 
     message.channel.send(str)
     return true

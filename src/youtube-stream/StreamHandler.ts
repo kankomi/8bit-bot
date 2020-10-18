@@ -9,7 +9,12 @@ import ytdl from 'ytdl-core'
 import apolloClient from '../apollo-client'
 import { PlayerState, Song } from '../types'
 import logger from '../utils/logging'
-import { ADD_SONG_MUTATION, SUBSCRIBE_PLAYER_STATE } from './player-queries'
+import {
+  ADD_SONG_MUTATION,
+  NEXT_SONG_MUTATION,
+  STOP_MUTATION,
+  SUBSCRIBE_PLAYER_STATE,
+} from './player-queries'
 
 export type ServerQueue = {
   songs: Song[]
@@ -184,10 +189,10 @@ export default class StreamHandler {
 
     dispatcher
       .on('finish', () => {
-        queue.songs.shift()
         if (queue.songs.length > 0) {
-          this.play(guildId)
+          apolloClient.mutate({ mutation: NEXT_SONG_MUTATION, variables: { guildId } })
         } else {
+          apolloClient.mutate({ mutation: STOP_MUTATION, variables: { guildId } })
           queue.playing = false
         }
       })
