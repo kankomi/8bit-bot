@@ -41,13 +41,15 @@ export default class StreamHandler {
         return
       }
 
-      if (state.songPlaying !== undefined) {
+      if (state.songPlaying !== undefined && state.songPlaying !== null) {
         if (state.songPlaying.url !== q.songs[0]?.url) {
           this.play(guildId, state.songPlaying)
           logger.info(`playing song ${state.songPlaying.title} now`)
         }
 
         q.songs = [state.songPlaying, ...state.songQueue]
+      } else {
+        q.songs = []
       }
 
       if (state.isPlaying !== q.playing) {
@@ -182,7 +184,9 @@ export default class StreamHandler {
       filter: 'audioonly',
     })
 
-    queue.textChannel.send(`Playing song **${title}**`)
+    queue.textChannel.send(
+      `Playing song **${title}**\nCheckout the web player here: ${process.env.FRONTEND_URL}/player/${guildId}`
+    )
     const dispatcher = queue.connection.play(stream)
     queue.playing = true
     queue.dispatcher = dispatcher
