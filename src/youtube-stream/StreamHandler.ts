@@ -42,7 +42,7 @@ export default class StreamHandler {
       }
 
       if (state.songPlaying !== undefined) {
-        if (state.songPlaying.url !== q.songs[0].url) {
+        if (state.songPlaying.url !== q.songs[0]?.url) {
           this.play(guildId, state.songPlaying)
           logger.info(`playing song ${state.songPlaying.title} now`)
         }
@@ -73,18 +73,20 @@ export default class StreamHandler {
       return queue
     }
 
-    logger.info(`subscribing to guid ${guildId}`)
-
     const state$ = apolloClient.subscribe<{ playerStateChanged: PlayerState }>({
       query: SUBSCRIBE_PLAYER_STATE,
       variables: { guildId },
     })
 
-    // TODO: unsubscribe
-    state$.subscribe(
+    const subscription = state$.subscribe(
       ({ data }) => this.handleSubscription(guildId)(data),
       (error) => logger.error(error)
     )
+
+    connection.on('disconnect', () => {
+      apolloClient.mutate({ mutation: STOP_MUTATION, variables: { guildId } })
+      subscription.unsubscribe()
+    })
 
     queue = {
       songs: [],
