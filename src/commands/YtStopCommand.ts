@@ -1,8 +1,8 @@
-import { Message } from 'discord.js';
-import { prefix } from '../config.json';
-import { Command } from '../types';
-import logger from '../utils/logging';
-import StreamHandler from '../youtube-stream/StreamHandler';
+import { Message } from 'discord.js'
+import { prefix } from '../config.json'
+import { Command } from '../types'
+import logger from '../utils/logging'
+import StreamHandler from '../youtube-stream/StreamHandler'
 
 const YtStopCommand: Command = {
   name: 'stop',
@@ -12,28 +12,28 @@ const YtStopCommand: Command = {
   description: 'Stops a Youtube video',
   async execute(message: Message) {
     if (message.author.bot) {
-      return false;
+      return false
     }
 
     if (message.channel.type === 'dm') {
-      return false;
+      return false
     }
 
     if (message.guild === null) {
-      logger.warn('Cannot get guild id!');
-      return false;
+      logger.warn('Cannot get guild id!')
+      return false
     }
 
-    const voiceChannel = message.member?.voice.channel;
+    const voiceChannel = message.member?.voice.channel
 
     if (!voiceChannel) {
-      message.reply('please choin a voice channel first');
-      return false;
+      message.reply('please choin a voice channel first')
+      return false
     }
-    StreamHandler.stop(message.guild.id);
+    StreamHandler.stop(message.guild.id)
 
-    return true;
+    return true
   },
-};
+}
 
-export default YtStopCommand;
+export default YtStopCommand

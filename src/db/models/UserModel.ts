@@ -1,11 +1,11 @@
 /* eslint-disable max-classes-per-file */
-import { Model, ModelAttributes, InitOptions, DataTypes } from 'sequelize';
+import { Model, ModelAttributes, InitOptions, DataTypes } from 'sequelize'
 
 class Dummy extends Model {}
 
 export default abstract class UserModel extends Dummy {
-  userId!: string;
-  guildId!: string;
+  userId!: string
+  guildId!: string
 
   static init(
     attributes: ModelAttributes<Model<{}, {}>, {}>,
@@ -24,6 +24,6 @@ export default abstract class UserModel extends Dummy {
         ...attributes,
       },
       options
-    );
+    )
   }
 }

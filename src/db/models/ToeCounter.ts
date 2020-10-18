@@ -1,8 +1,8 @@
-import { Sequelize, Model, DataTypes } from 'sequelize';
+import { Sequelize, Model, DataTypes } from 'sequelize'
 
 class ToeCounter extends Model {
-  userId!: string;
-  count!: number;
+  userId!: string
+  count!: number
 }
 
 export function init(sequelize: Sequelize) {
@@ -19,7 +19,7 @@ export function init(sequelize: Sequelize) {
       },
     },
     { sequelize }
-  );
+  )
 }
 
-export default ToeCounter;
+export default ToeCounter

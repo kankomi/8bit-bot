@@ -1,71 +1,71 @@
-import { Client, Collection, Message } from 'discord.js';
-import fs from 'fs';
-import { Command } from '../types';
-import EventHandlerInterface from './EventHandlerInterface';
-import logger from '../utils/logging';
-import { prefix } from '../config.json';
+import { Client, Collection, Message } from 'discord.js'
+import fs from 'fs'
+import { Command } from '../types'
+import EventHandlerInterface from './EventHandlerInterface'
+import logger from '../utils/logging'
+import { prefix } from '../config.json'
 
 export default class CommandHandler extends EventHandlerInterface {
-  commands = new Collection<string, Command>();
-  cooldowns = new Collection<string, Collection<string, number>>();
+  commands = new Collection<string, Command>()
+  cooldowns = new Collection<string, Collection<string, number>>()
 
   constructor(client: Client) {
-    super(client);
-    this.name = 'Command Handler';
-    this.loadCommands();
-    this.client.on('message', (message) => this.onMessage(message));
+    super(client)
+    this.name = 'Command Handler'
+    this.loadCommands()
+    this.client.on('message', (message) => this.onMessage(message))
   }
 
   async loadCommands() {
-    const commandFiles = fs.readdirSync('./src/commands').filter((f) => f.endsWith('.ts'));
+    const commandFiles = fs.readdirSync('./src/commands').filter((f) => f.endsWith('.ts'))
 
     for (const file of commandFiles) {
       // eslint-disable-next-line no-await-in-loop
-      const command: Command | undefined = (await import(`../commands/${file}`)).default;
+      const command: Command | undefined = (await import(`../commands/${file}`)).default
 
       if (command && command.execute) {
-        this.commands.set(command.name, command);
-        logger.info(`Loaded command '${command.name}'.`);
+        this.commands.set(command.name, command)
+        logger.info(`Loaded command '${command.name}'.`)
       }
     }
   }
 
   async onMessage(message: Message) {
     if (message.author.bot || !message.content.startsWith(prefix)) {
-      return;
+      return
     }
 
-    const messageContent = message.content.replace(/\s+/, ' ').trim();
-    const [cmd, ...args] = messageContent.substring(prefix.length).split(' ');
+    const messageContent = message.content.replace(/\s+/, ' ').trim()
+    const [cmd, ...args] = messageContent.substring(prefix.length).split(' ')
 
-    const command = this.commands.find((c) => c.name === cmd || !!c.aliases?.includes(cmd));
+    const command = this.commands.find((c) => c.name === cmd || !!c.aliases?.includes(cmd))
 
     if (!command) {
-      message.reply(`command '${cmd}' does not exist!`);
-      return;
+      message.reply(`command '${cmd}' does not exist!`)
+      return
     }
 
     if (command.permission) {
-      const member = message.guild?.members.cache.get(message.author.id);
+      const member = message.guild?.members.cache.get(message.author.id)
       if (member) {
         if (!member.permissions.has(command.permission)) {
-          message.reply('you do not have the permissions to execute this command');
-          return;
+          message.reply('you do not have the permissions to execute this command')
+          return
         }
       }
     }
 
     if (!this.checkArguments(message, command, args) || !this.checkCooldown(message, command)) {
-      return;
+      return
     }
 
-    const success = await command.execute(message, args);
+    const success = await command.execute(message, args)
 
     if (success) {
-      const timestamps = this.cooldowns.get(command.name) as Collection<string, number>;
-      timestamps.set(message.author.id, Date.now());
+      const timestamps = this.cooldowns.get(command.name) as Collection<string, number>
+      timestamps.set(message.author.id, Date.now())
 
-      setTimeout(() => timestamps.delete(message.author.id), command.cooldown * 1000);
+      setTimeout(() => timestamps.delete(message.author.id), command.cooldown * 1000)
     }
   }
 
@@ -73,39 +73,39 @@ export default class CommandHandler extends EventHandlerInterface {
     if (command.args && args.length === 0) {
       message.reply(
         `command arguments are missing, usage is \`${prefix}${command.name} ${command.usage}\``
-      );
+      )
 
-      return false;
+      return false
     }
 
-    return true;
+    return true
   }
 
   checkCooldown(message: Message, command: Command): boolean {
     if (!this.cooldowns.has(command.name)) {
-      this.cooldowns.set(command.name, new Collection<string, number>());
+      this.cooldowns.set(command.name, new Collection<string, number>())
     }
 
-    const now = Date.now();
-    const timestamps = this.cooldowns.get(command.name) as Collection<string, number>;
-    const cooldownAmount = command.cooldown * 1000;
+    const now = Date.now()
+    const timestamps = this.cooldowns.get(command.name) as Collection<string, number>
+    const cooldownAmount = command.cooldown * 1000
 
     if (timestamps?.has(message.author.id)) {
-      const expirationTime = (timestamps.get(message.author.id) as number) + cooldownAmount;
+      const expirationTime = (timestamps.get(message.author.id) as number) + cooldownAmount
 
       if (now < expirationTime) {
-        const timeLeft = (expirationTime - now) / 1000;
+        const timeLeft = (expirationTime - now) / 1000
 
         message.reply(
           `please wait ${timeLeft.toFixed(0)} more second(s) before using \`${
             command.name
           }\` again.`
-        );
+        )
 
-        return false;
+        return false
       }
     }
 
-    return true;
+    return true
   }
 }

@@ -1,7 +1,7 @@
-import { Message } from 'discord.js';
-import ToeCounter from '../db/models/ToeCounter';
-import { Command } from '../types';
-import { prefix } from '../config.json';
+import { Message } from 'discord.js'
+import ToeCounter from '../db/models/ToeCounter'
+import { Command } from '../types'
+import { prefix } from '../config.json'
 
 const ToesCommand: Command = {
   name: 'toes',
@@ -11,28 +11,28 @@ const ToesCommand: Command = {
   description: 'Shows how many times @user mentioned toes',
 
   async execute(message: Message, args: string[]) {
-    let user = message.author;
+    let user = message.author
 
     if (args.length > 0) {
-      const mentionedUser = message.mentions.users.first();
+      const mentionedUser = message.mentions.users.first()
 
       if (!mentionedUser) {
-        message.reply(`Cannot find user \`${args[0]}\``);
-        return false;
+        message.reply(`Cannot find user \`${args[0]}\``)
+        return false
       }
-      user = mentionedUser;
+      user = mentionedUser
     }
 
-    const result = await ToeCounter.findOne({ where: { userId: user.id } });
+    const result = await ToeCounter.findOne({ where: { userId: user.id } })
 
     if (!result) {
-      await message.channel.send(`${user.username} didn't mention toes even once!`);
+      await message.channel.send(`${user.username} didn't mention toes even once!`)
     } else {
-      await message.channel.send(`${user.username} mentioned toes ${result.count} times!`);
+      await message.channel.send(`${user.username} mentioned toes ${result.count} times!`)
     }
 
-    return true;
+    return true
   },
-};
+}
 
-export default ToesCommand;
+export default ToesCommand
