@@ -51,43 +51,47 @@ export default class CommandHandler extends EventHandlerInterface {
   }
 
   async onMessage(message: Message) {
-    if (message.author.bot || !message.content.startsWith(prefix)) {
-      return
-    }
+    try {
+      if (message.author.bot || !message.content.startsWith(prefix)) {
+        return
+      }
 
-    const messageContent = message.content.replace(/\s+/, ' ').trim()
-    const [cmd, ...args] = messageContent.substring(prefix.length).split(' ')
+      const messageContent = message.content.replace(/\s+/, ' ').trim()
+      const [cmd, ...args] = messageContent.substring(prefix.length).split(' ')
 
-    const command = CommandHandler.commands.find(
-      (c) => c.name === cmd || !!c.aliases?.includes(cmd)
-    )
+      const command = CommandHandler.commands.find(
+        (c) => c.name === cmd || !!c.aliases?.includes(cmd)
+      )
 
-    if (!command) {
-      message.reply(`command '${cmd}' does not exist!`)
-      return
-    }
+      if (!command) {
+        message.reply(`command '${cmd}' does not exist!`)
+        return
+      }
 
-    if (command.permission) {
-      const member = message.guild?.members.cache.get(message.author.id)
-      if (member) {
-        if (!member.permissions.has(command.permission)) {
-          message.reply('you do not have the permissions to execute this command')
-          return
+      if (command.permission) {
+        const member = message.guild?.members.cache.get(message.author.id)
+        if (member) {
+          if (!member.permissions.has(command.permission)) {
+            message.reply('you do not have the permissions to execute this command')
+            return
+          }
         }
       }
-    }
 
-    if (!this.checkArguments(message, command, args) || !this.checkCooldown(message, command)) {
-      return
-    }
+      if (!this.checkArguments(message, command, args) || !this.checkCooldown(message, command)) {
+        return
+      }
 
-    const success = await command.execute(message, args)
+      const success = await command.execute(message, args)
 
-    if (success) {
-      const timestamps = this.cooldowns.get(command.name) as Collection<string, number>
-      timestamps.set(message.author.id, Date.now())
+      if (success) {
+        const timestamps = this.cooldowns.get(command.name) as Collection<string, number>
+        timestamps.set(message.author.id, Date.now())
 
-      setTimeout(() => timestamps.delete(message.author.id), command.cooldown * 1000)
+        setTimeout(() => timestamps.delete(message.author.id), command.cooldown * 1000)
+      }
+    } catch (err) {
+      logger.error(`An exception occured while parsing message '${message}': ${err}`)
     }
   }
 

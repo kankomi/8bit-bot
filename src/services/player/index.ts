@@ -3,7 +3,6 @@ import { Song } from '../../types'
 import logger from '../../utils/logging'
 import { SEARCH_SONG_QUERY } from './queries'
 
-// eslint-disable-next-line import/prefer-default-export
 export async function searchSong(
   searchTerm: string,
   limit: number = 5
