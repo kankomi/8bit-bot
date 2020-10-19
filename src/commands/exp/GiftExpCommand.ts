@@ -1,8 +1,8 @@
 import { Message } from 'discord.js'
-import { prefix } from '../config.json'
-import Ranking from '../db/models/Ranking'
-import { Command } from '../types'
-import logger from '../utils/logging'
+import { prefix } from '../../config.json'
+import Ranking from '../../db/models/Ranking'
+import { Command } from '../../types'
+import logger from '../../utils/logging'
 
 const GiftExpCommand: Command = {
   name: 'gift',

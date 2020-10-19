@@ -1,11 +1,14 @@
-import { Client } from 'discord.js'
+import { Client, Message } from 'discord.js'
 
 export default abstract class EventHandlerInterface {
-  name: string = 'unknown'
-
   client: Client
+  name: string
 
-  constructor(client: Client) {
+  constructor(client: Client, name: string) {
     this.client = client
+    this.name = name
+    this.client.on('message', (message) => this.onMessage(message))
   }
+
+  abstract async onMessage(message: Message): Promise<void>
 }

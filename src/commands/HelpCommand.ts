@@ -1,18 +1,7 @@
 import { Message } from 'discord.js'
-import fs from 'fs'
 import { prefix } from '../config.json'
+import CommandHandler from '../eventhandler/CommandHandler'
 import { Command } from '../types'
-
-async function loadCommands(): Promise<Command[]> {
-  const promises: Promise<any>[] = []
-
-  for (const file of fs.readdirSync(__dirname)) {
-    promises.push(import(`./${file}`))
-  }
-
-  const cmds = await Promise.all(promises)
-  return cmds.reduce<Command[]>((prev, cur) => [...prev, cur.default], [])
-}
 
 function buildHelpString(commands: Command[], padding: number = 3) {
   let longestName = 0
@@ -65,10 +54,8 @@ const HelpCommand: Command = {
     command   aliases   usage     description
     help      [h]       !!help    Displays the help.
     */
-    const commands = await loadCommands()
-
     let helpStr = '8bit-Bot commands:\n```'
-    helpStr += buildHelpString(commands, 2)
+    helpStr += buildHelpString(CommandHandler.commands.array(), 2)
     helpStr += '```'
 
     message.channel.send(helpStr)

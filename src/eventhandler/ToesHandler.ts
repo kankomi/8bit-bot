@@ -6,14 +6,11 @@ import { prefix } from '../config.json'
 export default class ToeHandler extends EventHandlerInterface {
   messageTimestampCache: { [userId: string]: number } = {}
   constructor(client: Client) {
-    super(client)
-    this.name = 'toes'
-
-    this.client.on('message', (msg) => this.execute(msg))
+    super(client, 'toes')
   }
 
   // eslint-disable-next-line class-methods-use-this
-  async execute(message: Message) {
+  async onMessage(message: Message) {
     if (
       message.content.startsWith(prefix) ||
       message.client.user?.id === message.author.id ||

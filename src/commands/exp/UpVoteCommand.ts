@@ -1,8 +1,8 @@
 import { Message } from 'discord.js'
-import { prefix, experience } from '../config.json'
-import Ranking from '../db/models/Ranking'
-import { Command } from '../types'
-import logger from '../utils/logging'
+import { prefix, experience } from '../../config.json'
+import Ranking from '../../db/models/Ranking'
+import { Command } from '../../types'
+import logger from '../../utils/logging'
 
 const RankingCommand: Command = {
   name: 'up',

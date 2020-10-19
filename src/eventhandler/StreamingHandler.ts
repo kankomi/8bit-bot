@@ -1,4 +1,4 @@
-import { Client, Presence, TextChannel } from 'discord.js'
+import { Client, Message, Presence, TextChannel } from 'discord.js'
 import _ from 'lodash'
 import logger from '../utils/logging'
 import TimeoutCache from '../utils/TimeoutCache'
@@ -7,7 +7,7 @@ import EventHandlerInterface from './EventHandlerInterface'
 export default class ToeHandler extends EventHandlerInterface {
   messageTimestampCache = new TimeoutCache(6 * 60)
   constructor(client: Client) {
-    super(client)
+    super(client, 'streaming')
     this.name = 'streaming'
     this.client.on('presenceUpdate', (oldPresence, newPresence) => {
       const newBitRole = newPresence.member?.roles.cache.find(
@@ -20,6 +20,11 @@ export default class ToeHandler extends EventHandlerInterface {
 
       this.onPresenceUpdate(newPresence)
     })
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async onMessage(message: Message) {
+    // no implementation
   }
 
   async onPresenceUpdate(presence: Presence) {

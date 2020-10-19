@@ -1,12 +1,17 @@
-import { Client, GuildMember, PartialGuildMember, TextChannel } from 'discord.js'
+import { Client, GuildMember, Message, PartialGuildMember, TextChannel } from 'discord.js'
 import EventHandlerInterface from './EventHandlerInterface'
 
 export default class WelcomeHandler extends EventHandlerInterface {
   constructor(client: Client) {
-    super(client)
+    super(client, 'welcome')
     this.name = 'welcome'
     // deactivated
     // this.client.on('guildMemberAdd', this.welcome);
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async onMessage(message: Message) {
+    // no implementation
   }
 
   // eslint-disable-next-line class-methods-use-this

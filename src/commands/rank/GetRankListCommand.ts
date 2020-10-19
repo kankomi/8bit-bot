@@ -1,10 +1,10 @@
 import { Message } from 'discord.js'
-import { prefix } from '../config.json'
-import Ranking from '../db/models/Ranking'
-import { Command } from '../types'
-import logger from '../utils/logging'
+import { prefix } from '../../config.json'
+import Ranking from '../../db/models/Ranking'
+import { Command } from '../../types'
+import logger from '../../utils/logging'
 
-const RankingCommand: Command = {
+const GetRankListCommand: Command = {
   name: 'ranking',
   usage: `${prefix}ranking`,
   aliases: ['ranks', 'rankings'],
@@ -47,4 +47,4 @@ const RankingCommand: Command = {
   },
 }
 
-export default RankingCommand
+export default GetRankListCommand

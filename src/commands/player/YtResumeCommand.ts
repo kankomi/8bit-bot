@@ -1,15 +1,15 @@
 import { Message } from 'discord.js'
-import { prefix } from '../config.json'
-import { Command } from '../types'
-import logger from '../utils/logging'
-import StreamHandler from '../youtube-stream/StreamHandler'
+import { prefix } from '../../config.json'
+import { Command } from '../../types'
+import logger from '../../utils/logging'
+import StreamHandler from '../../youtube-stream/StreamHandler'
 
-const YtSkipCommand: Command = {
-  name: 'skip',
-  usage: `${prefix}skip`,
+const YtResumeCommand: Command = {
+  name: 'resume',
+  usage: `${prefix}resume`,
   cooldown: 0,
   args: false,
-  description: 'Skips a Youtube video',
+  description: 'Resumes a Youtube video',
   async execute(message: Message) {
     if (message.author.bot) {
       return false
@@ -30,10 +30,10 @@ const YtSkipCommand: Command = {
       message.reply('please choin a voice channel first')
       return false
     }
-    StreamHandler.skip(message.guild.id)
+    StreamHandler.resume(message.guild.id)
 
     return true
   },
 }
 
-export default YtSkipCommand
+export default YtResumeCommand

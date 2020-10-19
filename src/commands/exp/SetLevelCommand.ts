@@ -1,16 +1,18 @@
 import { Message } from 'discord.js'
-import { prefix } from '../config.json'
-import Ranking from '../db/models/Ranking'
-import { Command } from '../types'
-import logger from '../utils/logging'
+import { prefix } from '../../config.json'
+import Ranking from '../../db/models/Ranking'
+import { Command } from '../../types'
+import { MAX_LEVEL } from '../../utils/experience'
+import logger from '../../utils/logging'
 
-const GiveExpCommand: Command = {
-  name: 'give',
-  usage: `${prefix}give [@user] [amount]`,
+const SetLevelCommand: Command = {
+  name: 'setlevel',
+  usage: `${prefix}setlevel [@user] [level]`,
+  aliases: ['setl', 'setlvl'],
   cooldown: 0,
   args: true,
   permission: 'MANAGE_CHANNELS',
-  description: 'Give [amount] exp to [@user]',
+  description: 'Set [@user]s level to [level]',
   async execute(message: Message, args: string[]) {
     if (message.author.bot) {
       return false
@@ -22,14 +24,16 @@ const GiveExpCommand: Command = {
     }
 
     if (args.length < 2) {
-      message.reply('need `[user] [amount]` as argument')
+      message.reply('need `[user] [level]` as argument')
       return false
     }
 
-    const amount = parseInt(args[1], 10)
+    const level = parseInt(args[1], 10)
 
-    if (isNaN(amount) || amount < 0) {
-      message.reply(`${args[1]} is an invalid amount, need a positive number`)
+    if (isNaN(level) || level < 0 || level > MAX_LEVEL) {
+      message.reply(
+        `${args[1]} is an invalid level, need a positive number between 0 and ${MAX_LEVEL}`
+      )
       return false
     }
 
@@ -49,12 +53,13 @@ const GiveExpCommand: Command = {
       return false
     }
 
-    receiverRank.addExperience(amount)
+    receiverRank.setLevel(level)
     await receiverRank.save()
 
-    await message.channel.send(`<@${authorUserId}> gave ${amount} EXP to <@${receiverUserId}>.`)
+    await message.channel.send(`<@${authorUserId}> set <@${receiverUserId}>'s level to ${level}.`)
+
     return true
   },
 }
 
-export default GiveExpCommand
+export default SetLevelCommand

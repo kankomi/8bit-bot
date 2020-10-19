@@ -1,15 +1,15 @@
 import { Message } from 'discord.js'
-import { prefix } from '../config.json'
-import { Command } from '../types'
-import logger from '../utils/logging'
-import StreamHandler from '../youtube-stream/StreamHandler'
+import { prefix } from '../../config.json'
+import { Command } from '../../types'
+import logger from '../../utils/logging'
+import StreamHandler from '../../youtube-stream/StreamHandler'
 
-const YtResumeCommand: Command = {
-  name: 'resume',
-  usage: `${prefix}resume`,
+const YtPauseCommand: Command = {
+  name: 'pause',
+  usage: `${prefix}pause`,
   cooldown: 0,
   args: false,
-  description: 'Resumes a Youtube video',
+  description: 'Pauses a Youtube video',
   async execute(message: Message) {
     if (message.author.bot) {
       return false
@@ -30,10 +30,11 @@ const YtResumeCommand: Command = {
       message.reply('please choin a voice channel first')
       return false
     }
-    StreamHandler.resume(message.guild.id)
+
+    StreamHandler.pause(message.guild.id)
 
     return true
   },
 }
 
-export default YtResumeCommand
+export default YtPauseCommand

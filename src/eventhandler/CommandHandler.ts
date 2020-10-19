@@ -1,30 +1,50 @@
 import { Client, Collection, Message } from 'discord.js'
 import fs from 'fs'
-import { Command } from '../types'
-import EventHandlerInterface from './EventHandlerInterface'
-import logger from '../utils/logging'
+import path from 'path'
 import { prefix } from '../config.json'
+import { Command } from '../types'
+import logger from '../utils/logging'
+import EventHandlerInterface from './EventHandlerInterface'
 
 export default class CommandHandler extends EventHandlerInterface {
-  commands = new Collection<string, Command>()
+  static commands = new Collection<string, Command>()
   cooldowns = new Collection<string, Collection<string, number>>()
 
   constructor(client: Client) {
-    super(client)
-    this.name = 'Command Handler'
+    super(client, 'Command Handler')
     this.loadCommands()
-    this.client.on('message', (message) => this.onMessage(message))
+  }
+
+  getCommandFiles(folder: string): string[] {
+    const d = fs.readdirSync(folder)
+
+    return d.reduce<string[]>((acc, cur) => {
+      const filePath = path.join(folder, cur)
+
+      if (fs.lstatSync(filePath).isDirectory()) {
+        return [...acc, ...this.getCommandFiles(filePath)]
+      }
+
+      if (!cur.includes('Command')) {
+        return acc
+      }
+
+      // make filepath relative to this file
+      const relativeFilePath = filePath.replace(path.dirname(__dirname), '..')
+      return [...acc, relativeFilePath]
+    }, [])
   }
 
   async loadCommands() {
-    const commandFiles = fs.readdirSync('./src/commands').filter((f) => f.endsWith('.ts'))
+    const commandFiledir = path.join(path.dirname(__dirname), 'commands')
+    const commandFiles = this.getCommandFiles(commandFiledir)
 
     for (const file of commandFiles) {
       // eslint-disable-next-line no-await-in-loop
-      const command: Command | undefined = (await import(`../commands/${file}`)).default
+      const command: Command | undefined = (await import(file)).default
 
       if (command && command.execute) {
-        this.commands.set(command.name, command)
+        CommandHandler.commands.set(command.name, command)
         logger.info(`Loaded command '${command.name}'.`)
       }
     }
@@ -38,7 +58,9 @@ export default class CommandHandler extends EventHandlerInterface {
     const messageContent = message.content.replace(/\s+/, ' ').trim()
     const [cmd, ...args] = messageContent.substring(prefix.length).split(' ')
 
-    const command = this.commands.find((c) => c.name === cmd || !!c.aliases?.includes(cmd))
+    const command = CommandHandler.commands.find(
+      (c) => c.name === cmd || !!c.aliases?.includes(cmd)
+    )
 
     if (!command) {
       message.reply(`command '${cmd}' does not exist!`)

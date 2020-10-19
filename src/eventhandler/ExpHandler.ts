@@ -20,12 +20,7 @@ export default class ExpHandler extends EventHandlerInterface {
   inVoiceChatTimestamps = new Collection<string, number>()
 
   constructor(client: Client) {
-    super(client)
-    this.name = 'exp'
-
-    this.client.on('message', (message) => {
-      this.onMessage(message)
-    })
+    super(client, 'exp')
 
     this.client.on('voiceStateUpdate', (oldState, newState) => {
       this.onVoiceStateUpdate(oldState, newState)

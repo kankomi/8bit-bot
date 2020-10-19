@@ -1,8 +1,8 @@
 import { Message } from 'discord.js'
-import { prefix } from '../config.json'
-import { Command } from '../types'
-import logger from '../utils/logging'
-import StreamHandler from '../youtube-stream/StreamHandler'
+import { prefix } from '../../config.json'
+import { Command } from '../../types'
+import logger from '../../utils/logging'
+import StreamHandler from '../../youtube-stream/StreamHandler'
 
 const YtQueueCommand: Command = {
   name: 'queue',

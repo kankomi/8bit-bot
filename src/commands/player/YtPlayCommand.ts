@@ -1,25 +1,11 @@
 import { Collection, Message, TextChannel } from 'discord.js'
-import search from 'youtube-search'
-import { prefix } from '../config.json'
-import { Command } from '../types'
-import logger from '../utils/logging'
-import StreamHandler from '../youtube-stream/StreamHandler'
+import { prefix } from '../../config.json'
+import { searchSong } from '../../services/player'
+import { Command, Song } from '../../types'
+import logger from '../../utils/logging'
+import StreamHandler from '../../youtube-stream/StreamHandler'
 
-// TODO: move to own file
-async function searchYt(
-  term: string,
-  opts: search.YouTubeSearchOptions
-): Promise<search.YouTubeSearchResults[] | undefined> {
-  return new Promise((resolve, reject) => {
-    search(term, { key: process.env.YT_KEY, ...opts }, (err, results) => {
-      if (err) reject(err)
-
-      resolve(results)
-    })
-  })
-}
-
-const SearchCache = new Collection<string, search.YouTubeSearchResults[]>()
+const SearchCache = new Collection<string, Song[]>()
 
 const YtPlayCommand: Command = {
   name: 'play',
@@ -75,7 +61,7 @@ const YtPlayCommand: Command = {
           return false
         }
 
-        await StreamHandler.addSong(message.guild.id, cacheHit[num - 1].link)
+        await StreamHandler.addSong(message.guild.id, cacheHit[num - 1].url)
         SearchCache.delete(message.guild.id)
 
         if (!queue.playing) {
@@ -89,11 +75,13 @@ const YtPlayCommand: Command = {
         }
         // ... or search via yt api
       } else {
-        const results = await searchYt(searchTerm, { maxResults: 5, type: 'video' })
+        const results = await searchSong(searchTerm)
+
         if (!results) {
           message.channel.send(`Cannot find ${searchTerm}`)
           return false
         }
+
         SearchCache.set(message.guild.id, results)
 
         let str = 'Choose result:\n```'

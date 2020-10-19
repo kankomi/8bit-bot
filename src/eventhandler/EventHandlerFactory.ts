@@ -11,7 +11,7 @@ export default class EventHandlerFactory {
   private constructor() {}
 
   static async initialize(client: Client) {
-    const commandFiles = fs.readdirSync(__dirname).filter((f) => f.match(/.*Handler\.ts$/))
+    const commandFiles = fs.readdirSync(__dirname).filter((f) => f.match(/.*Handler(\.ts|\.js)$/))
 
     for (const file of commandFiles) {
       const HandlerClass = (await import(path.join(__dirname, file))).default
