@@ -10,6 +10,12 @@ import logger from '../../utils/logging'
 
 const subscriptions = new Collection<string, any>()
 
+/**
+ * Creates the youtube audio stream.
+ * @param connection
+ * @param textChannel
+ * @param song
+ */
 async function playStream(connection: VoiceConnection, textChannel: TextChannel, song: Song) {
   const { url, title } = song
 
@@ -25,16 +31,21 @@ async function playStream(connection: VoiceConnection, textChannel: TextChannel,
   return connection.play(stream)
 }
 
+/**
+ * Subscribes to the graphql subscription.
+ * @param guildId
+ * @param connection
+ * @param channel
+ */
 async function subscribeToPlayerControl(
   guildId: string,
   connection: Maybe<VoiceConnection>,
   channel: TextChannel
 ) {
-  const control$ = player.subscribeToPlayerControlState(guildId)
-  const subscription = control$.subscribe(async ({ data }) => {
+  const subscription = player.subscribeToPlayerControlState(guildId).subscribe(async ({ data }) => {
     const action = data?.playerStateUpdated?.action
     const playSong = data?.playerStateUpdated?.song
-    logger.info(action)
+
     if (!action || !connection) {
       return
     }
@@ -45,29 +56,32 @@ async function subscribeToPlayerControl(
 
     switch (action) {
       case PlayerControlAction.Pause:
-        connection.dispatcher.pause()
+        connection.dispatcher?.pause()
         break
       case PlayerControlAction.Resume:
-        connection.dispatcher.resume()
+        connection.dispatcher?.resume()
         break
       case PlayerControlAction.Stop:
-        connection.dispatcher.end()
+        connection.dispatcher?.end()
         break
       case PlayerControlAction.Play: {
         const dispatcher = await playStream(connection, channel, playSong as Song)
-        dispatcher
-          .on('close', () => {
-            player.stopPlayer(guildId)
-            subscription.unsubscribe()
-          })
-          .on('finish', async () => {
-            const state = await player.getPlayerState(guildId)
-            if (state?.songQueue && state.songQueue.length > 0) {
-              player.nextSong(guildId)
-            } else {
-              dispatcher?.end()
-            }
-          })
+        connection.on('closing', () => {
+          player.stopPlayer(guildId)
+          subscription.unsubscribe()
+          subscriptions.delete(guildId)
+          logger.info(`unsubscribing from player control for guild id ${guildId}`)
+        })
+
+        // gets called when the song is finished
+        dispatcher.on('finish', async () => {
+          const state = await player.getPlayerState(guildId)
+          if (state?.songQueue && state.songQueue.length > 0) {
+            player.nextSong(guildId)
+          } else {
+            dispatcher?.end()
+          }
+        })
         break
       }
 
@@ -83,6 +97,8 @@ async function searchSongAndWaitForReply(
   searchTerm: string,
   channel: TextChannel
 ): Promise<Maybe<Song>> {
+  // if the search term is just a number, assume that the user
+  // just entered a result selection and so we don't need to search
   if (/^\d+$/g.test(searchTerm)) {
     return undefined
   }
@@ -165,6 +181,7 @@ const YtPlayCommand: Command = {
       return false
     }
 
+    // search the song on youtube and wait for the user to select one of the results
     const song = await searchSongAndWaitForReply(searchTerm, message.channel as TextChannel)
 
     if (!song) {
@@ -173,10 +190,15 @@ const YtPlayCommand: Command = {
 
     logger.info(`chosen song ${song?.title}`)
 
+    // check if there is already an established voice connection
+    // or if the current connection does not match the voice connection of the bot
     let connection = message.guild.voice?.connection
     if (!connection || message.guild.voice?.channel !== message.member?.voice.channel) {
+      // join the voice channel of the message author
       connection = await voiceChannel.join()
     }
+
+    // subscribe to player control changes, if not already
     if (!subscriptions.has(guildId)) {
       const sub = await subscribeToPlayerControl(
         guildId,
@@ -186,8 +208,10 @@ const YtPlayCommand: Command = {
 
       subscriptions.set(guildId, sub)
     }
-    const songQueue = await player.addSong(guildId, song.url)
 
+    // add the song to the queue
+    // the backend will send the 'play' action when the song should be played
+    const songQueue = await player.addSong(guildId, song.url)
     const position = songQueue.findIndex((s) => s.title === song.title)
 
     if (position !== -1) {
