@@ -1,4 +1,4 @@
-export type Maybe<T> = T | null
+export type Maybe<T> = T | null | undefined
 export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] }
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
@@ -55,7 +55,7 @@ export type Ranking = {
 export type PlayerState = {
   __typename?: 'PlayerState'
   isPlaying: Scalars['Boolean']
-  songPlaying: Song
+  songPlaying?: Maybe<Song>
   songQueue: Array<Song>
 }
 
@@ -111,6 +111,7 @@ export enum StatisticType {
   TimeInVcS = 'TIME_IN_VC_S',
   PicturePosted = 'PICTURE_POSTED',
   LinkPosted = 'LINK_POSTED',
+  Toe = 'TOE',
 }
 
 export type Statistics = {
@@ -125,7 +126,7 @@ export type Statistics = {
 export type Mutation = {
   __typename?: 'Mutation'
   _?: Maybe<Scalars['Boolean']>
-  addSong?: Maybe<Song>
+  addSong: Array<Song>
   playSong?: Maybe<Song>
   nextSong?: Maybe<Song>
   togglePlayPause?: Maybe<PlayerState>
@@ -133,7 +134,7 @@ export type Mutation = {
   reorderSongs?: Maybe<PlayerState>
   stop?: Maybe<PlayerState>
   postMessage?: Maybe<Scalars['String']>
-  updateStatistic?: Maybe<Statistics>
+  updateStatistic: Statistics
 }
 
 export type MutationAddSongArgs = {
@@ -161,7 +162,7 @@ export type MutationRemoveSongArgs = {
 
 export type MutationReorderSongsArgs = {
   guildId: Scalars['String']
-  songQueue: Array<Maybe<SongInput>>
+  songQueue: Array<SongInput>
 }
 
 export type MutationStopArgs = {
@@ -192,10 +193,28 @@ export type Subscription = {
   __typename?: 'Subscription'
   _?: Maybe<Scalars['Boolean']>
   playerStateChanged?: Maybe<PlayerState>
+  playerStateUpdated?: Maybe<PlayerControl>
 }
 
 export type SubscriptionPlayerStateChangedArgs = {
   guildId: Scalars['String']
+}
+
+export type SubscriptionPlayerStateUpdatedArgs = {
+  guildId: Scalars['String']
+}
+
+export type PlayerControl = {
+  __typename?: 'PlayerControl'
+  song?: Maybe<Song>
+  action: PlayerControlAction
+}
+
+export enum PlayerControlAction {
+  Resume = 'RESUME',
+  Pause = 'PAUSE',
+  Stop = 'STOP',
+  Play = 'PLAY',
 }
 
 export type SearchSongQueryVariables = Exact<{
@@ -205,4 +224,113 @@ export type SearchSongQueryVariables = Exact<{
 
 export type SearchSongQuery = { __typename?: 'Query' } & {
   searchSong?: Maybe<Array<Maybe<{ __typename?: 'Song' } & Pick<Song, 'title' | 'url' | 'cover'>>>>
+}
+
+export type GetPlayerStateQueryVariables = Exact<{
+  guildId: Scalars['String']
+}>
+
+export type GetPlayerStateQuery = { __typename?: 'Query' } & {
+  player?: Maybe<
+    { __typename?: 'PlayerState' } & Pick<PlayerState, 'isPlaying'> & {
+        songQueue: Array<{ __typename?: 'Song' } & Pick<Song, 'title' | 'cover' | 'url'>>
+        songPlaying?: Maybe<{ __typename?: 'Song' } & Pick<Song, 'title' | 'cover' | 'url'>>
+      }
+  >
+}
+
+export type SubscribeToPlayerControlStateSubscriptionVariables = Exact<{
+  guildId: Scalars['String']
+}>
+
+export type SubscribeToPlayerControlStateSubscription = { __typename?: 'Subscription' } & {
+  playerStateUpdated?: Maybe<
+    { __typename?: 'PlayerControl' } & Pick<PlayerControl, 'action'> & {
+        song?: Maybe<{ __typename?: 'Song' } & Pick<Song, 'title' | 'cover' | 'url'>>
+      }
+  >
+}
+
+export type SubscribeToPlayerStateSubscriptionVariables = Exact<{
+  guildId: Scalars['String']
+}>
+
+export type SubscribeToPlayerStateSubscription = { __typename?: 'Subscription' } & {
+  playerStateChanged?: Maybe<
+    { __typename?: 'PlayerState' } & Pick<PlayerState, 'isPlaying'> & {
+        songQueue: Array<{ __typename?: 'Song' } & Pick<Song, 'title' | 'cover' | 'url'>>
+        songPlaying?: Maybe<{ __typename?: 'Song' } & Pick<Song, 'title' | 'cover' | 'url'>>
+      }
+  >
+}
+
+export type AddSongMutationVariables = Exact<{
+  guildId: Scalars['String']
+  url: Scalars['String']
+}>
+
+export type AddSongMutation = { __typename?: 'Mutation' } & {
+  addSong: Array<{ __typename?: 'Song' } & Pick<Song, 'url' | 'cover' | 'title'>>
+}
+
+export type RemoveSongMutationVariables = Exact<{
+  guildId: Scalars['String']
+  url: Scalars['String']
+}>
+
+export type RemoveSongMutation = { __typename?: 'Mutation' } & Pick<Mutation, 'removeSong'>
+
+export type PlaySongMutationVariables = Exact<{
+  guildId: Scalars['String']
+  url: Scalars['String']
+}>
+
+export type PlaySongMutation = { __typename?: 'Mutation' } & {
+  playSong?: Maybe<{ __typename?: 'Song' } & Pick<Song, 'title'>>
+}
+
+export type ReorderSongsMutationVariables = Exact<{
+  guildId: Scalars['String']
+  songs: Array<SongInput>
+}>
+
+export type ReorderSongsMutation = { __typename?: 'Mutation' } & {
+  reorderSongs?: Maybe<
+    { __typename?: 'PlayerState' } & {
+      songQueue: Array<{ __typename?: 'Song' } & Pick<Song, 'title'>>
+    }
+  >
+}
+
+export type TogglePlayPauseMutationVariables = Exact<{
+  guildId: Scalars['String']
+}>
+
+export type TogglePlayPauseMutation = { __typename?: 'Mutation' } & {
+  togglePlayPause?: Maybe<{ __typename?: 'PlayerState' } & Pick<PlayerState, 'isPlaying'>>
+}
+
+export type StopSongMutationVariables = Exact<{
+  guildId: Scalars['String']
+}>
+
+export type StopSongMutation = { __typename?: 'Mutation' } & {
+  stop?: Maybe<{ __typename?: 'PlayerState' } & Pick<PlayerState, 'isPlaying'>>
+}
+
+export type NextSongMutationVariables = Exact<{
+  guildId: Scalars['String']
+}>
+
+export type NextSongMutation = { __typename?: 'Mutation' } & {
+  nextSong?: Maybe<{ __typename?: 'Song' } & Pick<Song, 'title'>>
+}
+
+export type IncToesMutationVariables = Exact<{
+  guildId: Scalars['String']
+  userId: Scalars['String']
+}>
+
+export type IncToesMutation = { __typename?: 'Mutation' } & {
+  updateStatistic: { __typename?: 'Statistics' } & Pick<Statistics, 'value'>
 }

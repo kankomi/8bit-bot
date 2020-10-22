@@ -27,6 +27,7 @@
     "implicit-arrow-linebreak": "off",
     "no-bitwise": "off",
     "@typescript-eslint/semi": "off",
+    "@typescript-eslint/indent": "off",
     "import/prefer-default-export": "off",
     "linebreak-style": "off"
   }

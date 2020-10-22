@@ -6,21 +6,13 @@ import {
   VoiceConnection,
 } from 'discord.js'
 import ytdl from 'ytdl-core'
-import apolloClient from '../apollo-client'
-import { PlayerState, Song } from '../types'
-import logger from '../utils/logging'
-import {
-  ADD_SONG_MUTATION,
-  NEXT_SONG_MUTATION,
-  STOP_MUTATION,
-  SUBSCRIBE_PLAYER_STATE,
-} from './player-queries'
+import { PlayerState, Song } from '../generated/graphql'
+import * as player from '../services/player'
 
 export type ServerQueue = {
-  songs: Song[]
+  playerState: PlayerState
   voiceChannel: VoiceChannel
   textChannel: TextChannel
-  playing: boolean
   connection: VoiceConnection
   dispatcher?: StreamDispatcher
 }
@@ -32,67 +24,84 @@ export default class StreamHandler {
     return this.serverQueue.get(guildId)
   }
 
-  static handleSubscription(guildId: string) {
-    return (data: { playerStateChanged: PlayerState } | null | undefined) => {
-      const state = data?.playerStateChanged
-      const q = this.serverQueue.get(guildId)
+  // static handleSubscription(guildId: string) {
+  //   return (data: Maybe<SubscribeToPlayerStateSubscription>) => {
+  //     const newState = data?.playerStateChanged
+  //     const q = this.serverQueue.get(guildId)
 
-      if (!state || !q) {
-        return
-      }
+  //     if (!newState || !q) {
+  //       return
+  //     }
 
-      if (state.songPlaying !== undefined && state.songPlaying !== null) {
-        if (state.songPlaying.url !== q.songs[0]?.url) {
-          this.play(guildId, state.songPlaying)
-          logger.info(`playing song ${state.songPlaying.title} now`)
-        }
+  //     const oldState = { ...q.playerState }
+  //     // set the new state
+  //     logger.info('updating state')
+  //     q.playerState = { ...newState }
 
-        q.songs = [state.songPlaying, ...state.songQueue]
-      } else {
-        q.songs = []
-      }
+  //     if (newState.songPlaying) {
+  //       // the song url is different, we should play the new song
+  //       if (newState.songPlaying?.url !== oldState.songPlaying?.url) {
+  //         this.play(guildId, newState.songPlaying)
+  //         logger.info(`playing song ${newState.songPlaying.title} now`)
+  //         return
+  //       }
+  //     } else {
+  //       // songPlaying === undefined means no song is playing
+  //       this.stop(guildId)
+  //       return
+  //     }
 
-      if (state.isPlaying !== q.playing) {
-        if (state.isPlaying) {
-          this.resume(guildId)
-        } else {
-          this.pause(guildId)
-        }
-      }
-    }
-  }
+  //     if (newState.isPlaying !== oldState.isPlaying) {
+  //       if (newState.isPlaying) {
+  //         this.resume(guildId)
+  //       } else {
+  //         this.pause(guildId)
+  //       }
+  //     }
+  //   }
+  // }
 
-  static createOrGetServerQueue(
+  static async createOrGetServerQueue(
     guildId: string,
     voiceChannel: VoiceChannel,
     textChannel: TextChannel,
     connection: VoiceConnection,
     dispatcher?: StreamDispatcher
-  ): ServerQueue {
+  ): Promise<ServerQueue> {
     let queue = this.serverQueue.get(guildId)
 
+    // check if there is already a state available
+    let playerState = await player.getPlayerState(guildId)
+
+    // if it does not exist, create a default state
+    playerState = playerState || {
+      songPlaying: undefined,
+      isPlaying: false,
+      songQueue: [],
+    }
+
     if (queue) {
+      queue.connection = connection
+      queue.voiceChannel = voiceChannel
+      queue.dispatcher = dispatcher
+      queue.textChannel = textChannel
       return queue
     }
 
-    const state$ = apolloClient.subscribe<{ playerStateChanged: PlayerState }>({
-      query: SUBSCRIBE_PLAYER_STATE,
-      variables: { guildId },
-    })
+    // const state$ = player.subscribeToPlayerState(guildId)
 
-    const subscription = state$.subscribe(
-      ({ data }) => this.handleSubscription(guildId)(data),
-      (error) => logger.error(error)
-    )
+    // const subscription = state$.subscribe(
+    //   ({ data }) => this.handleSubscription(guildId)(data),
+    //   (error) => logger.error(error)
+    // )
 
-    connection.on('disconnect', () => {
-      apolloClient.mutate({ mutation: STOP_MUTATION, variables: { guildId } })
-      subscription.unsubscribe()
-    })
+    // connection.on('disconnect', () => {
+    //   player.stopSong(guildId)
+    //   subscription.unsubscribe()
+    // })
 
     queue = {
-      songs: [],
-      playing: false,
+      playerState,
       connection,
       voiceChannel,
       textChannel,
@@ -106,77 +115,52 @@ export default class StreamHandler {
   static stop(guildId: string) {
     const q = this.serverQueue.get(guildId)
     if (q) {
-      q.playing = false
-      q.songs = []
+      // q.playing = false
+      // q.songs = []
       q.dispatcher?.end()
       q.voiceChannel.leave()
     }
+
+    player.stopSong(guildId)
   }
 
   static async pause(guildId: string) {
     const q = this.serverQueue.get(guildId)
     if (q) {
-      q.playing = false
+      // q.playing = false
       // await q.textChannel.send(`Pausing song **${q.songs[0].title}**`)
       q.dispatcher?.pause()
     }
+
+    player.togglePlayPause(guildId)
   }
 
   static async resume(guildId: string) {
     const q = this.serverQueue.get(guildId)
     if (q) {
-      q.playing = true
+      // q.playing = true
       // await q.textChannel.send(`Resuming song **${q.songs[0].title}**`)
       q.dispatcher?.resume()
     }
+    player.togglePlayPause(guildId)
   }
 
   static async addSong(guildId: string, songUrl: string) {
-    const q = this.serverQueue.get(guildId)
-    if (q) {
-      const { videoDetails } = await ytdl.getInfo(songUrl)
-
-      q.songs.push({
-        url: songUrl,
-        title: videoDetails.title,
-        cover: videoDetails.thumbnail.thumbnails[videoDetails.thumbnail.thumbnails.length - 1].url,
-      })
-
-      apolloClient.mutate({ mutation: ADD_SONG_MUTATION, variables: { guildId, url: songUrl } })
-    }
+    player.addSong(guildId, songUrl)
   }
 
   static skip(guildId: string) {
-    const q = this.serverQueue.get(guildId)
-
-    if (!q) {
-      return
-    }
-
-    q.connection.dispatcher.end()
+    player.nextSong(guildId)
   }
 
   static getSongQueue(guildId: string): Song[] {
-    const songs = this.serverQueue.get(guildId)?.songs
+    const songs = this.serverQueue.get(guildId)?.playerState.songQueue
 
     return songs !== undefined ? songs : []
   }
 
-  static async play(guildId: string, song?: Song) {
-    const queue = this.serverQueue.get(guildId)
-
-    if (!queue) {
-      logger.warn(`guildId ${guildId} not in server queue`)
-      return
-    }
-    if (queue.songs.length === 0 && song === undefined) {
-      queue.connection.dispatcher?.end()
-      queue.playing = false
-      return
-    }
-
-    const url = song?.url || queue.songs[0].url
-    const title = song?.title || queue.songs[0].title
+  static async play(connection: VoiceConnection, textChannel: TextChannel, song: Song) {
+    const { url, title } = song
 
     const stream = ytdl(url, {
       quality: 'highestaudio',
@@ -184,24 +168,9 @@ export default class StreamHandler {
       filter: 'audioonly',
     })
 
-    queue.textChannel.send(
-      `Playing song **${title}**\nCheckout the web player here: ${process.env.FRONTEND_URL}/player/${guildId}`
+    textChannel.send(
+      `Playing song **${title}**\nCheckout the web player here: ${process.env.FRONTEND_URL}/player/${textChannel.guild.id}`
     )
-    const dispatcher = queue.connection.play(stream)
-    queue.playing = true
-    queue.dispatcher = dispatcher
-
-    logger.info(`Playing ${title} in guild ${guildId}`)
-
-    dispatcher
-      .on('finish', () => {
-        if (queue.songs.length > 0) {
-          apolloClient.mutate({ mutation: NEXT_SONG_MUTATION, variables: { guildId } })
-        } else {
-          apolloClient.mutate({ mutation: STOP_MUTATION, variables: { guildId } })
-          queue.playing = false
-        }
-      })
-      .on('error', (err) => logger.error(err))
+    return connection.play(stream)
   }
 }

@@ -15,15 +15,3 @@ export type Command = {
   permission?: BitFieldResolvable<PermissionString>
   execute(message: Message, args: string[]): Promise<boolean>
 }
-
-export type Song = {
-  title: string
-  url: string
-  cover: string
-}
-
-export type PlayerState = {
-  isPlaying: boolean
-  songPlaying?: Song
-  songQueue: Song[]
-}

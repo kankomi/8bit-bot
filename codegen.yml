@@ -1,6 +1,6 @@
 overwrite: true
 schema: "http://localhost:3000/graphql"
-documents: "src/**/queries.ts"
+documents: "src/**/*queries.ts"
 generates:
   src/generated/graphql.ts:
     plugins:
@@ -9,3 +9,5 @@ generates:
 hooks:
   afterOneFileWrite:
     - prettier --write
+config:
+  maybeValue: T | null | undefined
