@@ -2,7 +2,7 @@ import { Message } from 'discord.js'
 import { prefix } from '../../config.json'
 import { Command } from '../../types'
 import logger from '../../utils/logging'
-import StreamHandler from '../../youtube-stream/StreamHandler'
+import * as player from '../../services/player'
 
 const YtQueueCommand: Command = {
   name: 'queue',
@@ -31,24 +31,24 @@ const YtQueueCommand: Command = {
       message.reply('please choin a voice channel first')
       return false
     }
-    const queue = StreamHandler.getServerQueue(message.guild.id)
+    const playerState = await player.getPlayerState(message.guild.id)
 
-    if (!queue) {
-      message.channel.send('No songs queued.')
+    if (!playerState) {
+      message.channel.send('Cannot get player state.')
       return true
     }
 
-    const { songs } = queue
+    const { songQueue } = playerState
     let str = '```'
 
-    if (songs.length === 0) {
+    if (songQueue.length === 0) {
       message.channel.send('No songs queued.')
       return true
     }
 
-    for (let i = 1; i <= songs.length; i++) {
-      const { title } = songs[i - 1]
-      str += `\n${queue.playing && i === 1 ? 'Now playing' : i - 1} - ${title}`
+    for (let i = 1; i <= songQueue.length; i++) {
+      const { title } = songQueue[i - 1]
+      str += `\n${playerState.isPlaying && i === 1 ? 'Now playing' : i - 1} - ${title}`
     }
     str += '\n```'
     str += `\nCheckout the web player here: ${process.env.FRONTEND_URL}/player/${message.guild.id}`

@@ -1,8 +1,8 @@
 import { Message } from 'discord.js'
 import { prefix } from '../../config.json'
+import * as player from '../../services/player'
 import { Command } from '../../types'
 import logger from '../../utils/logging'
-import StreamHandler from '../../youtube-stream/StreamHandler'
 
 const YtPauseCommand: Command = {
   name: 'pause',
@@ -31,7 +31,7 @@ const YtPauseCommand: Command = {
       return false
     }
 
-    StreamHandler.pause(message.guild.id)
+    player.togglePlayPause(message.guild.id)
 
     return true
   },

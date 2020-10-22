@@ -70,7 +70,7 @@ export async function getPlayerState(guildId: string): Promise<Maybe<PlayerState
   return data.player
 }
 
-export async function stopSong(guildId: string): Promise<void> {
+export async function stopPlayer(guildId: string): Promise<void> {
   const { errors } = await apolloClient.mutate<StopSongMutation, StopSongMutationVariables>({
     mutation: STOP_MUTATION,
     variables: { guildId },

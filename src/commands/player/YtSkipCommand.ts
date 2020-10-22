@@ -2,7 +2,7 @@ import { Message } from 'discord.js'
 import { prefix } from '../../config.json'
 import { Command } from '../../types'
 import logger from '../../utils/logging'
-import StreamHandler from '../../youtube-stream/StreamHandler'
+import * as player from '../../services/player'
 
 const YtSkipCommand: Command = {
   name: 'skip',
@@ -30,7 +30,14 @@ const YtSkipCommand: Command = {
       message.reply('please choin a voice channel first')
       return false
     }
-    StreamHandler.skip(message.guild.id)
+    const playerState = await player.getPlayerState(message.guild.id)
+
+    if (!playerState || playerState?.songQueue.length === 0) {
+      message.channel.send('No more songs in queue.')
+      return true
+    }
+
+    player.nextSong(message.guild.id)
 
     return true
   },

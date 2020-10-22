@@ -2,7 +2,7 @@ import { Message } from 'discord.js'
 import { prefix } from '../../config.json'
 import { Command } from '../../types'
 import logger from '../../utils/logging'
-import StreamHandler from '../../youtube-stream/StreamHandler'
+import * as player from '../../services/player'
 
 const YtResumeCommand: Command = {
   name: 'resume',
@@ -30,7 +30,7 @@ const YtResumeCommand: Command = {
       message.reply('please choin a voice channel first')
       return false
     }
-    StreamHandler.resume(message.guild.id)
+    player.togglePlayPause(message.guild.id)
 
     return true
   },

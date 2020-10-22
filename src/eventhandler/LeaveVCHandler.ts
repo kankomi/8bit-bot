@@ -1,7 +1,7 @@
 import { Client, Message, VoiceState } from 'discord.js'
 import EventHandlerInterface from './EventHandlerInterface'
 import logger from '../utils/logging'
-import StreamHandler from '../youtube-stream/StreamHandler'
+import * as player from '../services/player'
 
 export default class LeaveVCHandler extends EventHandlerInterface {
   constructor(client: Client) {
@@ -16,14 +16,10 @@ export default class LeaveVCHandler extends EventHandlerInterface {
 
   async onVSupdate(oldState: VoiceState, newState: VoiceState) {
     if (newState.channel?.members.array() === undefined) {
-      StreamHandler.stop(newState.guild.id)
-      const queue = StreamHandler.getServerQueue(newState.guild.id)
-      if (queue) {
-        logger.info('No one in voice channel, leaving...')
-        queue.songs = []
-        queue.dispatcher?.end()
-        queue.connection.disconnect()
-      }
+      player.stopPlayer(newState.guild.id)
+      logger.info('No one in voice channel, leaving...')
+      oldState.channel?.leave()
+      oldState.connection?.disconnect()
     }
   }
 }

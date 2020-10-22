@@ -1,14 +1,29 @@
 import { Collection, Message, TextChannel, VoiceConnection } from 'discord.js'
 import { Maybe } from 'graphql/jsutils/Maybe'
+import ytdl from 'ytdl-core'
 import { prefix } from '../../config.json'
 import { PlayerControlAction, Song } from '../../generated/graphql'
 import * as player from '../../services/player'
 import { searchSong } from '../../services/player'
 import { Command } from '../../types'
 import logger from '../../utils/logging'
-import StreamHandler from '../../youtube-stream/StreamHandler'
 
 const subscriptions = new Collection<string, any>()
+
+async function playStream(connection: VoiceConnection, textChannel: TextChannel, song: Song) {
+  const { url, title } = song
+
+  const stream = ytdl(url, {
+    quality: 'highestaudio',
+    highWaterMark: 1 << 25,
+    filter: 'audioonly',
+  })
+
+  textChannel.send(
+    `Playing song **${title}**\nCheckout the web player here: ${process.env.FRONTEND_URL}/player/${textChannel.guild.id}`
+  )
+  return connection.play(stream)
+}
 
 async function subscribeToPlayerControl(
   guildId: string,
@@ -39,10 +54,10 @@ async function subscribeToPlayerControl(
         connection.dispatcher.end()
         break
       case PlayerControlAction.Play: {
-        const dispatcher = await StreamHandler.play(connection, channel, playSong as Song)
+        const dispatcher = await playStream(connection, channel, playSong as Song)
         dispatcher
           .on('close', () => {
-            player.stopSong(guildId)
+            player.stopPlayer(guildId)
             subscription.unsubscribe()
           })
           .on('finish', async () => {

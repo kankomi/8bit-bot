@@ -1,8 +1,8 @@
 import { Message } from 'discord.js'
 import { prefix } from '../../config.json'
+import { stopPlayer } from '../../services/player'
 import { Command } from '../../types'
 import logger from '../../utils/logging'
-import StreamHandler from '../../youtube-stream/StreamHandler'
 
 const YtStopCommand: Command = {
   name: 'stop',
@@ -30,7 +30,16 @@ const YtStopCommand: Command = {
       message.reply('please choin a voice channel first')
       return false
     }
-    StreamHandler.stop(message.guild.id)
+    const { voice } = message.guild
+
+    if (!voice) {
+      logger.info('Not connected to voice channel')
+      return false
+    }
+
+    stopPlayer(message.guild.id)
+    voice.connection?.dispatcher?.end()
+    voice.channel?.leave()
 
     return true
   },
