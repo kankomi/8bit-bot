@@ -17,7 +17,7 @@ export type Query = {
   player?: Maybe<PlayerState>
   searchSong?: Maybe<Array<Maybe<Song>>>
   guild?: Maybe<Guild>
-  statistics?: Maybe<Statistics>
+  statistic: Statistics
 }
 
 export type QueryRankingArgs = {
@@ -42,10 +42,10 @@ export type QueryGuildArgs = {
   guildId: Scalars['String']
 }
 
-export type QueryStatisticsArgs = {
+export type QueryStatisticArgs = {
   guildId: Scalars['String']
   userId: Scalars['String']
-  type?: Maybe<StatisticType>
+  type: StatisticType
 }
 
 export type Ranking = {
@@ -266,6 +266,19 @@ export type GetRankingQuery = { __typename?: 'Query' } & {
   >
 }
 
+export type GetRankingsQueryVariables = Exact<{
+  guildId: Scalars['String']
+  userId: Scalars['String']
+}>
+
+export type GetRankingsQuery = { __typename?: 'Query' } & {
+  rankings: Array<
+    { __typename?: 'Ranking' } & Pick<Ranking, 'experience' | 'level' | 'expToNextLevel'> & {
+        user?: Maybe<{ __typename?: 'User' } & Pick<User, 'id' | 'username'>>
+      }
+  >
+}
+
 export type SearchSongQueryVariables = Exact<{
   searchTerm: Scalars['String']
   limit: Scalars['Int']
@@ -386,11 +399,12 @@ export type UpdateStatisticMutation = { __typename?: 'Mutation' } & {
   updateStatistic: { __typename?: 'Statistics' } & Pick<Statistics, 'value'>
 }
 
-export type IncToesMutationVariables = Exact<{
+export type GetStatisticQueryVariables = Exact<{
   guildId: Scalars['String']
   userId: Scalars['String']
+  type: StatisticType
 }>
 
-export type IncToesMutation = { __typename?: 'Mutation' } & {
-  updateStatistic: { __typename?: 'Statistics' } & Pick<Statistics, 'value'>
+export type GetStatisticQuery = { __typename?: 'Query' } & {
+  statistic: { __typename?: 'Statistics' } & Pick<Statistics, 'value'>
 }

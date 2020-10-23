@@ -5,10 +5,12 @@ import {
   GiveExperienceMutationVariables,
   QueryRankingArgs,
   GetRankingQuery,
+  QueryRankingsArgs,
+  GetRankingsQuery,
 } from '../../generated/graphql'
 import { formatGraphQlErrors } from '../../utils'
 import logger from '../../utils/logging'
-import { GET_RANKING, GIVE_EXPERIENCE } from './queries'
+import { GET_RANKING, GET_RANKINGS, GIVE_EXPERIENCE } from './queries'
 
 export async function giveExperience(
   guildId: string,
@@ -52,6 +54,21 @@ export async function getRanking(guildId: string, userId: string) {
     })
 
     return data.ranking
+  } catch (error) {
+    logger.error(`an error in getRanking occured: ${JSON.stringify(error, null, 2)}`)
+  }
+
+  return undefined
+}
+
+export async function getRankings(guildId: string) {
+  try {
+    const { data } = await apolloClient.query<GetRankingsQuery, QueryRankingsArgs>({
+      query: GET_RANKINGS,
+      variables: { guildId },
+    })
+
+    return data.rankings
   } catch (error) {
     logger.error(`an error in getRanking occured: ${JSON.stringify(error, null, 2)}`)
   }

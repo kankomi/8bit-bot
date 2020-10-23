@@ -20,3 +20,16 @@ export const GET_RANKING = gql`
     }
   }
 `
+export const GET_RANKINGS = gql`
+  query getRankings($guildId: String!) {
+    rankings(guildId: $guildId) {
+      experience
+      level
+      expToNextLevel
+      user {
+        id
+        username
+      }
+    }
+  }
+`

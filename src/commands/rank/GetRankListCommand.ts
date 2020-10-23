@@ -1,8 +1,8 @@
 import { Message } from 'discord.js'
 import { prefix } from '../../config.json'
-import Ranking from '../../db/models/Ranking'
 import { Command } from '../../types'
 import logger from '../../utils/logging'
+import * as experience from '../../services/experience'
 
 const GetRankListCommand: Command = {
   name: 'ranking',
@@ -22,11 +22,7 @@ const GetRankListCommand: Command = {
     }
 
     const guildId = message.guild.id
-
-    const rankings = await Ranking.findAll({
-      where: { guildId },
-      order: [['experience', 'DESC']],
-    })
+    const rankings = await experience.getRankings(guildId)
 
     if (!rankings) {
       message.channel.send('there are no rankings yet.')
@@ -36,9 +32,8 @@ const GetRankListCommand: Command = {
     let str = ''
 
     for (let i = 0; i < Math.min(rankings.length, 10); i++) {
-      const username = message.guild.members.cache.get(rankings[i].userId)?.user.username
       const rank = rankings[i]
-      str += `${i + 1}: ${username} - Level ${rank.level} (${rank.experience} EXP) \n`
+      str += `${i + 1}: ${rank.user?.username} - Level ${rank.level} (${rank.experience} EXP) \n`
     }
 
     await message.channel.send(`\`\`\`${str}\`\`\``)
