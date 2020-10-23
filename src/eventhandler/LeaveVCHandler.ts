@@ -15,11 +15,15 @@ export default class LeaveVCHandler extends EventHandlerInterface {
   }
 
   async onVSupdate(oldState: VoiceState, newState: VoiceState) {
+    const voiceConnection = oldState.guild.voice?.connection
+    if (!voiceConnection) {
+      return
+    }
+
     if (newState.channel?.members.array() === undefined) {
-      player.stopPlayer(newState.guild.id)
       logger.info('No one in voice channel, leaving...')
-      oldState.channel?.leave()
-      oldState.connection?.disconnect()
+      player.stopPlayer(newState.guild.id)
+      voiceConnection.disconnect()
     }
   }
 }
