@@ -10,10 +10,11 @@ const myFormat = format.printf(({ level, message, timestamp, ...metadata }) => {
   return msg
 })
 
+const level = process.env.NODE_ENV === 'development' ? 'debug' : 'info'
 const logger = createLogger({
   exitOnError: false,
-  level: 'info',
-  transports: [new transports.Console({ level: 'info' })],
+  level,
+  transports: [new transports.Console({ level })],
   format: combine(colorize(), splat(), fTimestamp(), myFormat),
 })
 

@@ -4,7 +4,7 @@ import logger from '../utils/logging'
 import TimeoutCache from '../utils/TimeoutCache'
 import EventHandlerInterface from './EventHandlerInterface'
 
-export default class ToeHandler extends EventHandlerInterface {
+export default class StreamingHandler extends EventHandlerInterface {
   messageTimestampCache = new TimeoutCache(6 * 60)
   constructor(client: Client) {
     super(client, 'streaming')
