@@ -3,6 +3,7 @@ import { WebSocketLink } from '@apollo/client/link/ws'
 import { getMainDefinition } from '@apollo/client/utilities'
 import fetch from 'cross-fetch'
 import ws from 'ws'
+import logger from './utils/logging'
 
 const httpLink = new HttpLink({
   uri: process.env.HTTP_SERVER_URL,
@@ -30,6 +31,9 @@ const splitLink = split(
   wsLink,
   httpLink
 )
+
+logger.info(`connecting to backend with url ${process.env.HTTP_SERVER_URL}`)
+logger.info(`connecting to websocket backend with url ${process.env.WS_SERVER_URL}`)
 
 const apolloClient = new ApolloClient({
   link: splitLink,
