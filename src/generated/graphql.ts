@@ -13,6 +13,7 @@ export type Query = {
   __typename?: 'Query'
   _?: Maybe<Scalars['Boolean']>
   ranking?: Maybe<Ranking>
+  rankings: Array<Ranking>
   player?: Maybe<PlayerState>
   searchSong?: Maybe<Array<Maybe<Song>>>
   guild?: Maybe<Guild>
@@ -22,6 +23,10 @@ export type Query = {
 export type QueryRankingArgs = {
   guildId: Scalars['String']
   userId: Scalars['String']
+}
+
+export type QueryRankingsArgs = {
+  guildId: Scalars['String']
 }
 
 export type QueryPlayerArgs = {
@@ -48,8 +53,17 @@ export type Ranking = {
   id: Scalars['ID']
   guildId: Scalars['String']
   userId: Scalars['String']
-  experience?: Maybe<Scalars['Float']>
-  level?: Maybe<Scalars['Float']>
+  experience: Scalars['Float']
+  level: Scalars['Float']
+  user?: Maybe<User>
+  expToNextLevel?: Maybe<Scalars['Int']>
+}
+
+export type User = {
+  __typename?: 'User'
+  id: Scalars['ID']
+  username: Scalars['String']
+  avatarUrl?: Maybe<Scalars['String']>
 }
 
 export type PlayerState = {
@@ -108,8 +122,8 @@ export type Role = {
 
 export enum StatisticType {
   Message = 'MESSAGE',
-  TimeInVcS = 'TIME_IN_VC_S',
-  PicturePosted = 'PICTURE_POSTED',
+  TimeVcInS = 'TIME_VC_IN_S',
+  AttachementPosted = 'ATTACHEMENT_POSTED',
   LinkPosted = 'LINK_POSTED',
   Toe = 'TOE',
 }
@@ -126,6 +140,7 @@ export type Statistics = {
 export type Mutation = {
   __typename?: 'Mutation'
   _?: Maybe<Scalars['Boolean']>
+  giveExp: Scalars['Int']
   addSong: Array<Song>
   playSong?: Maybe<Song>
   nextSong?: Maybe<Song>
@@ -135,6 +150,13 @@ export type Mutation = {
   stop?: Maybe<PlayerState>
   postMessage?: Maybe<Scalars['String']>
   updateStatistic: Statistics
+}
+
+export type MutationGiveExpArgs = {
+  guildId: Scalars['String']
+  userId: Scalars['String']
+  type: ExperienceType
+  timeInVCinS?: Maybe<Scalars['Int']>
 }
 
 export type MutationAddSongArgs = {
@@ -183,6 +205,13 @@ export type MutationUpdateStatisticArgs = {
   value: Scalars['Int']
 }
 
+export enum ExperienceType {
+  GiveReaction = 'GIVE_REACTION',
+  ReceiveReaction = 'RECEIVE_REACTION',
+  Voice = 'VOICE',
+  Message = 'MESSAGE',
+}
+
 export type SongInput = {
   title: Scalars['String']
   cover: Scalars['String']
@@ -215,6 +244,26 @@ export enum PlayerControlAction {
   Pause = 'PAUSE',
   Stop = 'STOP',
   Play = 'PLAY',
+}
+
+export type GiveExperienceMutationVariables = Exact<{
+  guildId: Scalars['String']
+  userId: Scalars['String']
+  type: ExperienceType
+  timeInVCinS?: Maybe<Scalars['Int']>
+}>
+
+export type GiveExperienceMutation = { __typename?: 'Mutation' } & Pick<Mutation, 'giveExp'>
+
+export type GetRankingQueryVariables = Exact<{
+  guildId: Scalars['String']
+  userId: Scalars['String']
+}>
+
+export type GetRankingQuery = { __typename?: 'Query' } & {
+  ranking?: Maybe<
+    { __typename?: 'Ranking' } & Pick<Ranking, 'experience' | 'level' | 'expToNextLevel'>
+  >
 }
 
 export type SearchSongQueryVariables = Exact<{
@@ -324,6 +373,17 @@ export type NextSongMutationVariables = Exact<{
 
 export type NextSongMutation = { __typename?: 'Mutation' } & {
   nextSong?: Maybe<{ __typename?: 'Song' } & Pick<Song, 'title'>>
+}
+
+export type UpdateStatisticMutationVariables = Exact<{
+  guildId: Scalars['String']
+  userId: Scalars['String']
+  type: StatisticType
+  value: Scalars['Int']
+}>
+
+export type UpdateStatisticMutation = { __typename?: 'Mutation' } & {
+  updateStatistic: { __typename?: 'Statistics' } & Pick<Statistics, 'value'>
 }
 
 export type IncToesMutationVariables = Exact<{

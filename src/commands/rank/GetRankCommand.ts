@@ -1,8 +1,7 @@
 import { Message } from 'discord.js'
 import { prefix } from '../../config.json'
-import Ranking from '../../db/models/Ranking'
+import * as expService from '../../services/experience'
 import { Command } from '../../types'
-import { getExpForLevel } from '../../utils/experience'
 import logger from '../../utils/logging'
 
 const GetRankCommand: Command = {
@@ -34,8 +33,7 @@ const GetRankCommand: Command = {
       userId = user.id
       username = user.username
     }
-
-    const rank = await Ranking.getOrCreateRanking(userId, guildId)
+    const rank = await expService.getRanking(guildId, userId)
 
     if (!rank) {
       logger.error(`Could not create ranking for user ${userId} in guild ${guildId}`)
@@ -43,9 +41,7 @@ const GetRankCommand: Command = {
     }
 
     await message.channel.send(
-      `\`${username} is level ${rank.level} with ${
-        rank.experience
-      } EXP. EXP needed for next level: ${getExpForLevel(rank.level + 1)}.\``
+      `\`${username} is level ${rank.level} with ${rank.experience} EXP. EXP needed for next level: ${rank.expToNextLevel}.\``
     )
 
     return true

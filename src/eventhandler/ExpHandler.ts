@@ -7,12 +7,11 @@ import {
   User,
   VoiceState,
 } from 'discord.js'
-import Ranking from '../db/models/Ranking'
-import { getLevelForExp } from '../utils/experience'
+import { ExperienceType } from '../generated/graphql'
+import { giveExperience } from '../services/experience'
 import logger from '../utils/logging'
 import TimeoutCache from '../utils/TimeoutCache'
 import EventHandlerInterface from './EventHandlerInterface'
-import { experience } from '../config.json'
 
 export default class ExpHandler extends EventHandlerInterface {
   messageCooldowns = new TimeoutCache(5)
@@ -23,7 +22,11 @@ export default class ExpHandler extends EventHandlerInterface {
     super(client, 'exp')
 
     this.client.on('voiceStateUpdate', (oldState, newState) => {
-      this.onVoiceStateUpdate(oldState, newState)
+      try {
+        this.onVoiceStateUpdate(oldState, newState)
+      } catch (error) {
+        logger.error(`error in onVoiceChangeUpdate occured: ${JSON.stringify(error, null, 2)}`)
+      }
     })
 
     this.client.on('messageReactionAdd', (reaction, user) => {
@@ -60,10 +63,8 @@ export default class ExpHandler extends EventHandlerInterface {
 
     this.messageCooldowns.set(userId, message.createdTimestamp)
 
-    await this.giveExp(userId, guildId, experience.MESSAGE_EXP)
-    logger.info(
-      `${message.author.username} gained ${experience.MESSAGE_EXP} exp for writing a message.`
-    )
+    const expGained = await giveExperience(guildId, userId, ExperienceType.Message)
+    logger.info(`${message.author.username} gained ${expGained} exp for writing a message.`)
   }
 
   onVoiceStateUpdate(oldState: VoiceState, newState: VoiceState) {
@@ -124,14 +125,12 @@ export default class ExpHandler extends EventHandlerInterface {
     }
     this.inVoiceChatTimestamps.delete(userId)
 
-    const minutesinVc = (Date.now() - enteredTimestamp) / (1000 * 60)
-    const exp = Math.round(minutesinVc * experience.VOICE_PER_M_EXP)
+    const secondsInVc = (Date.now() - enteredTimestamp) / 1000
+    const expGained = await giveExperience(guildId, userId, ExperienceType.Voice, secondsInVc)
 
-    if (exp > 0) {
-      this.giveExp(userId, guildId, exp)
-
-      logger.info(`${username} gained ${exp} exp for being in VC for ${minutesinVc} minutes.`)
-    }
+    logger.info(
+      `${username} gained ${expGained} exp for being in VC for ${secondsInVc / 60} minutes.`
+    )
   }
 
   async onMessageReactionAdd(reaction: MessageReaction, user: User | PartialUser) {
@@ -157,32 +156,15 @@ export default class ExpHandler extends EventHandlerInterface {
     }
 
     // always give the receiver exp
-    await this.giveExp(userIdReceived, guildId, experience.RECEIVE_REACTION_EXP)
-    logger.info(
-      `Giving ${message.author.username} ${experience.RECEIVE_REACTION_EXP} exp for getting a reaction.`
-    )
+    const expGained = await giveExperience(guildId, userIdReceived, ExperienceType.ReceiveReaction)
+    logger.info(`Giving ${message.author.username} ${expGained} exp for getting a reaction.`)
 
     // give reaction giver exp on cooldown
     if (this.reactionCooldowns.isExpired(userIdGiven)) {
-      await this.giveExp(userIdGiven, guildId, experience.GIVE_REACTION_EXP)
-      logger.info(
-        `Giving ${user.username} ${experience.GIVE_REACTION_EXP} exp for giving a reaction.`
-      )
+      const exp = await giveExperience(guildId, userIdReceived, ExperienceType.GiveReaction)
+
+      logger.info(`Giving ${user.username} ${exp} exp for giving a reaction.`)
       this.reactionCooldowns.set(userIdGiven)
-    }
-  }
-
-  async giveExp(userId: string, guildId: string, exp: number) {
-    const result = await Ranking.findOne({
-      where: { userId, guildId },
-    })
-
-    if (!result) {
-      await Ranking.create({ userId, guildId })
-    } else {
-      result.experience += exp
-      result.level = getLevelForExp(result.experience)
-      await result.save()
     }
   }
 }
