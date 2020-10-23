@@ -1,6 +1,5 @@
 import Discord from 'discord.js'
 import dotenv from 'dotenv'
-import { initializeDb } from './db'
 import EventHandlerFactory from './eventhandler/EventHandlerFactory'
 import logger from './utils/logging'
 
@@ -33,7 +32,6 @@ async function main() {
   })
   setupClient(client)
   await EventHandlerFactory.initialize(client)
-  await initializeDb()
 
   try {
     await client.login(BOT_TOKEN)
