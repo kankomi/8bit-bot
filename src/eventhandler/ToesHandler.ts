@@ -1,7 +1,9 @@
 import { Message, Client } from 'discord.js'
 import EventHandlerInterface from './EventHandlerInterface'
-import ToeCounter from '../db/models/ToeCounter'
 import { prefix } from '../config.json'
+import * as statistics from '../services/statistics'
+import logger from '../utils/logging'
+import { StatisticType } from '../generated/graphql'
 
 export default class ToeHandler extends EventHandlerInterface {
   messageTimestampCache: { [userId: string]: number } = {}
@@ -19,6 +21,13 @@ export default class ToeHandler extends EventHandlerInterface {
       return
     }
     const userId = message.author.id
+    const guildId = message.guild?.id
+
+    if (!guildId) {
+      logger.error('Cannot get guild id in toes handler')
+      return
+    }
+
     const lastTimestamp = this.messageTimestampCache[userId]
     if (lastTimestamp && Date.now() - lastTimestamp < 60 * 1000) {
       message.react('😡')
@@ -29,13 +38,6 @@ export default class ToeHandler extends EventHandlerInterface {
 
     this.messageTimestampCache[userId] = message.createdTimestamp
 
-    const result = await ToeCounter.findOne({ where: { userId } })
-
-    if (!result) {
-      await ToeCounter.create({ userId, count: 1 })
-    } else {
-      result.count += 1
-      await result.save()
-    }
+    statistics.updateStatistic(guildId, userId, StatisticType.Toe, 1)
   }
 }
