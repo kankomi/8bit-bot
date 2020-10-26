@@ -139,7 +139,7 @@ async function searchSongAndWaitForReply(
     return undefined
   }
 
-  return results[number]
+  return results[number - 1]
 }
 
 const YtPlayCommand: Command = {
