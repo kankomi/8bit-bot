@@ -1,7 +1,7 @@
 import { Collection, Message, TextChannel, VoiceConnection } from 'discord.js'
 import { Maybe } from 'graphql/jsutils/Maybe'
-import ytdl from 'ytdl-core'
-import { prefix } from '../../config.json'
+import ytdl from 'ytdl-core-discord'
+import config from '../../config'
 import { PlayerControlAction, Song } from '../../generated/graphql'
 import * as player from '../../services/player'
 import { searchSong } from '../../services/player'
@@ -9,7 +9,7 @@ import { Command } from '../../types'
 import logger from '../../utils/logging'
 
 const subscriptions = new Collection<string, any>()
-
+const { prefix } = config
 /**
  * Creates the youtube audio stream.
  * @param connection
@@ -19,16 +19,17 @@ const subscriptions = new Collection<string, any>()
 async function playStream(connection: VoiceConnection, textChannel: TextChannel, song: Song) {
   const { url, title } = song
 
-  const stream = ytdl(url, {
-    quality: 'highestaudio',
-    highWaterMark: 1 << 25,
-    filter: 'audioonly',
-  })
+  const stream = await ytdl(url)
+
+  stream.on('error', (error) => logger.error(`error while streaming ${title}: ${error.message}`))
+
+  const dispatcher = connection.play(stream, { type: 'opus' })
 
   textChannel.send(
     `Playing song **${title}**\nCheckout the web player here: ${process.env.FRONTEND_URL}/player/${textChannel.guild.id}`
   )
-  return connection.play(stream)
+
+  return dispatcher
 }
 
 /**

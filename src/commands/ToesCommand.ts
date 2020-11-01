@@ -1,9 +1,11 @@
 import { Message } from 'discord.js'
-import { prefix } from '../config.json'
+import config from '../config'
 import { StatisticType } from '../generated/graphql'
 import * as statistics from '../services/statistics'
 import { Command } from '../types'
 import logger from '../utils/logging'
+
+const { prefix } = config
 
 const ToesCommand: Command = {
   name: 'toes',

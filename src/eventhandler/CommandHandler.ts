@@ -1,10 +1,12 @@
 import { Client, Collection, Message } from 'discord.js'
 import fs from 'fs'
 import path from 'path'
-import { prefix } from '../config.json'
+import config from '../config'
 import { Command } from '../types'
 import logger from '../utils/logging'
 import EventHandlerInterface from './EventHandlerInterface'
+
+const { prefix } = config
 
 export default class CommandHandler extends EventHandlerInterface {
   static commands = new Collection<string, Command>()

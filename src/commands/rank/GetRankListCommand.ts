@@ -1,8 +1,10 @@
 import { Message } from 'discord.js'
-import { prefix } from '../../config.json'
+import config from '../../config'
 import { Command } from '../../types'
 import logger from '../../utils/logging'
 import * as experience from '../../services/experience'
+
+const { prefix } = config
 
 const GetRankListCommand: Command = {
   name: 'ranking',

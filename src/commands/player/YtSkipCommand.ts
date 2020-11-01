@@ -1,8 +1,10 @@
 import { Message } from 'discord.js'
-import { prefix } from '../../config.json'
+import config from '../../config'
 import { Command } from '../../types'
 import logger from '../../utils/logging'
 import * as player from '../../services/player'
+
+const { prefix } = config
 
 const YtSkipCommand: Command = {
   name: 'skip',

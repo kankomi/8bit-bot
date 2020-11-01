@@ -1,9 +1,11 @@
 import { Message, Client } from 'discord.js'
 import EventHandlerInterface from './EventHandlerInterface'
-import { prefix } from '../config.json'
+import config from '../config'
 import * as statistics from '../services/statistics'
 import logger from '../utils/logging'
 import { StatisticType } from '../generated/graphql'
+
+const { prefix } = config
 
 export default class ToeHandler extends EventHandlerInterface {
   messageTimestampCache: { [userId: string]: number } = {}
