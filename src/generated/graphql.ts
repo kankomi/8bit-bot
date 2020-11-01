@@ -126,6 +126,8 @@ export enum StatisticType {
   AttachementPosted = 'ATTACHEMENT_POSTED',
   LinkPosted = 'LINK_POSTED',
   Toe = 'TOE',
+  Reacted = 'REACTED',
+  ReceivedReaction = 'RECEIVED_REACTION',
 }
 
 export type Statistics = {
@@ -268,7 +270,6 @@ export type GetRankingQuery = { __typename?: 'Query' } & {
 
 export type GetRankingsQueryVariables = Exact<{
   guildId: Scalars['String']
-  userId: Scalars['String']
 }>
 
 export type GetRankingsQuery = { __typename?: 'Query' } & {

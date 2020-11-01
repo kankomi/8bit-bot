@@ -1,4 +1,12 @@
-import { Client, Collection, Message, VoiceState } from 'discord.js'
+import {
+  Client,
+  Collection,
+  Message,
+  MessageReaction,
+  PartialUser,
+  User,
+  VoiceState,
+} from 'discord.js'
 import EventHandlerInterface from './EventHandlerInterface'
 import logger from '../utils/logging'
 import { updateStatistic } from '../services/statistics'
@@ -13,6 +21,28 @@ export default class StatisticsHandler extends EventHandlerInterface {
     client.on('voiceStateUpdate', (oldState, newState) => {
       this.onVoiceStateUpdate(oldState, newState)
     })
+
+    client.on('messageReactionAdd', (reaction, user) => {
+      this.onReaction(reaction, user)
+    })
+  }
+
+  async onReaction(reaction: MessageReaction, user: User | PartialUser) {
+    const message = await reaction.message.fetch()
+    const userIdReceived = message.author.id
+    const userIdGiven = user.id
+    const guildId = message.guild?.id
+
+    if (!guildId) {
+      logger.warn('cannot get guild id in onReaction')
+      return
+    }
+
+    let stats = await updateStatistic(guildId, userIdGiven, StatisticType.Reacted, 1)
+    logger.info(`new reacted stats for user ${userIdGiven} is ${stats}`)
+
+    stats = await updateStatistic(guildId, userIdReceived, StatisticType.ReceivedReaction, 1)
+    logger.info(`new received reaction stats for user ${userIdReceived} is ${stats}`)
   }
 
   async onMessage(message: Message) {
