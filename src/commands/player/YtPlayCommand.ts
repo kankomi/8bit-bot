@@ -25,10 +25,15 @@ async function playStream(connection: VoiceConnection, textChannel: TextChannel,
     filter: 'audioonly',
   })
 
+  stream.on('error', (error) => logger.error(`error while streaming ${title}: ${error.message}`))
+
+  const dispatcher = connection.play(stream)
+
   textChannel.send(
     `Playing song **${title}**\nCheckout the web player here: ${process.env.FRONTEND_URL}/player/${textChannel.guild.id}`
   )
-  return connection.play(stream)
+
+  return dispatcher
 }
 
 /**
