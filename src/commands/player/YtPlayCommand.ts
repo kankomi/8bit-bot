@@ -1,7 +1,7 @@
 import { Collection, Message, TextChannel, VoiceConnection } from 'discord.js'
 import { Maybe } from 'graphql/jsutils/Maybe'
 import ytdl from 'ytdl-core'
-import { prefix } from '../../config.json'
+import config from '../../config'
 import { PlayerControlAction, Song } from '../../generated/graphql'
 import * as player from '../../services/player'
 import { searchSong } from '../../services/player'
@@ -9,7 +9,7 @@ import { Command } from '../../types'
 import logger from '../../utils/logging'
 
 const subscriptions = new Collection<string, any>()
-
+const { prefix } = config
 /**
  * Creates the youtube audio stream.
  * @param connection

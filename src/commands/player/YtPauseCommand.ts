@@ -1,8 +1,10 @@
 import { Message } from 'discord.js'
-import { prefix } from '../../config.json'
+import config from '../../config'
 import * as player from '../../services/player'
 import { Command } from '../../types'
 import logger from '../../utils/logging'
+
+const { prefix } = config
 
 const YtPauseCommand: Command = {
   name: 'pause',

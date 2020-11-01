@@ -1,7 +1,9 @@
 import { Message } from 'discord.js'
-import { prefix } from '../config.json'
+import config from '../config'
 import CommandHandler from '../eventhandler/CommandHandler'
 import { Command } from '../types'
+
+const { prefix } = config
 
 function buildHelpString(commands: Command[], padding: number = 3) {
   let longestName = 0
