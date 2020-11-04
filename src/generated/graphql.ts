@@ -17,7 +17,9 @@ export type Query = {
   player?: Maybe<PlayerState>
   searchSong?: Maybe<Array<Maybe<Song>>>
   guild?: Maybe<Guild>
+  message?: Maybe<Scalars['String']>
   statistic: Statistics
+  config: Config
 }
 
 export type QueryRankingArgs = {
@@ -42,10 +44,20 @@ export type QueryGuildArgs = {
   guildId: Scalars['String']
 }
 
+export type QueryMessageArgs = {
+  guildId: Scalars['String']
+  channelId: Scalars['String']
+  messageId: Scalars['String']
+}
+
 export type QueryStatisticArgs = {
   guildId: Scalars['String']
   userId: Scalars['String']
   type: StatisticType
+}
+
+export type QueryConfigArgs = {
+  guildId: Scalars['String']
 }
 
 export type Ranking = {
@@ -86,9 +98,9 @@ export type Guild = {
   name?: Maybe<Scalars['String']>
   bannerUrl?: Maybe<Scalars['String']>
   iconUrl?: Maybe<Scalars['String']>
-  emojis?: Maybe<Array<Maybe<Emoji>>>
-  channels?: Maybe<Array<Maybe<Channel>>>
-  roles?: Maybe<Array<Maybe<Role>>>
+  emojis: Array<Emoji>
+  channels: Array<Channel>
+  roles: Array<Role>
 }
 
 export type GuildEmojisArgs = {
@@ -102,22 +114,23 @@ export type GuildChannelsArgs = {
 export type Emoji = {
   __typename?: 'Emoji'
   id: Scalars['ID']
-  name?: Maybe<Scalars['String']>
-  identifier?: Maybe<Scalars['String']>
+  name: Scalars['String']
+  identifier: Scalars['String']
   url?: Maybe<Scalars['String']>
+  category: Scalars['String']
 }
 
 export type Channel = {
   __typename?: 'Channel'
   id: Scalars['ID']
-  name?: Maybe<Scalars['String']>
-  type?: Maybe<Scalars['String']>
+  name: Scalars['String']
+  type: Scalars['String']
 }
 
 export type Role = {
   __typename?: 'Role'
   id: Scalars['ID']
-  name?: Maybe<Scalars['String']>
+  name: Scalars['String']
 }
 
 export enum StatisticType {
@@ -139,6 +152,12 @@ export type Statistics = {
   type: StatisticType
 }
 
+export type Config = {
+  __typename?: 'Config'
+  guildId: Scalars['String']
+  rankMessageId?: Maybe<Scalars['String']>
+}
+
 export type Mutation = {
   __typename?: 'Mutation'
   _?: Maybe<Scalars['Boolean']>
@@ -151,7 +170,9 @@ export type Mutation = {
   reorderSongs?: Maybe<PlayerState>
   stop?: Maybe<PlayerState>
   postMessage?: Maybe<Scalars['String']>
+  reactToMessage?: Maybe<Scalars['String']>
   updateStatistic: Statistics
+  setConfigValue: Config
 }
 
 export type MutationGiveExpArgs = {
@@ -196,8 +217,15 @@ export type MutationStopArgs = {
 export type MutationPostMessageArgs = {
   guildId: Scalars['String']
   channelId: Scalars['String']
+  messageId?: Maybe<Scalars['String']>
   message: Scalars['String']
-  reactEmojiIds?: Maybe<Array<Maybe<Scalars['String']>>>
+}
+
+export type MutationReactToMessageArgs = {
+  guildId: Scalars['String']
+  channelId: Scalars['String']
+  messageId: Scalars['String']
+  emojiIdentifier: Array<Scalars['String']>
 }
 
 export type MutationUpdateStatisticArgs = {
@@ -205,6 +233,12 @@ export type MutationUpdateStatisticArgs = {
   userId: Scalars['String']
   type: StatisticType
   value: Scalars['Int']
+}
+
+export type MutationSetConfigValueArgs = {
+  guildId: Scalars['String']
+  type: ConfigType
+  value: Scalars['String']
 }
 
 export enum ExperienceType {
@@ -218,6 +252,10 @@ export type SongInput = {
   title: Scalars['String']
   cover: Scalars['String']
   url: Scalars['String']
+}
+
+export enum ConfigType {
+  RankMessageId = 'RANK_MESSAGE_ID',
 }
 
 export type Subscription = {
@@ -246,6 +284,14 @@ export enum PlayerControlAction {
   Pause = 'PAUSE',
   Stop = 'STOP',
   Play = 'PLAY',
+}
+
+export type GetConfigQueryVariables = Exact<{
+  guildId: Scalars['String']
+}>
+
+export type GetConfigQuery = { __typename?: 'Query' } & {
+  config: { __typename?: 'Config' } & Pick<Config, 'guildId' | 'rankMessageId'>
 }
 
 export type GiveExperienceMutationVariables = Exact<{
