@@ -70,7 +70,9 @@ export const ADD_SONG_MUTATION = gql`
 
 export const REMOVE_SONG_MUTATION = gql`
   mutation removeSong($guildId: String!, $url: String!) {
-    removeSong(guildId: $guildId, url: $url)
+    removeSong(guildId: $guildId, url: $url) {
+      isPlaying
+    }
   }
 `
 
