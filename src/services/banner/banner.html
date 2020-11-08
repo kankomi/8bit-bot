@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body
+    style="
+      font-family: 'Montserrat', sans-serif;
+      font-size: x-large;
+      margin: 0;
+      padding: 10px;
+      width: 800px;
+      height: 200px;
+      background: #7b1fa2;
+      color: #fff;
+    "
+  >
+    <div
+      style="
+        position: fixed;
+        width: 1200px;
+        height: 600px;
+        background: #424242;
+        left: -350px;
+        bottom: 30%;
+        z-index: -1;
+        transform: rotate(60deg);
+      "
+    ></div>
+    <div style="padding: 20px; z-index: 2">
+      <div style="display: flex; align-items: center">
+        <img
+          style="
+            width: 130px;
+            height: 130px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-right: 42px;
+          "
+          src="{{avatarUrl}}"
+        />
+        <div>
+          <h2 style="margin: 0; margin-bottom: 16px; border-bottom: 3px solid #7b1fa2">
+            {{username}}
+          </h2>
+          <div>Level: {{level}} &nbsp; XP: {{exp}} / {{expNextLevel}}</div>
+        </div>
+      </div>
+      <div
+        style="
+          width: 66%;
+          height: 1.2rem;
+          background: #fafafa;
+          border-radius: 15px;
+          position: relative;
+          overflow: hidden;
+          margin-top: 24px;
+          border-left: 1px solid #7b1fa2;
+        "
+      >
+        <div
+          style="position: absolute; background: #7b1fa2; height: 100%; width: {{levelPercent}}%; z-index: 9"
+        ></div>
+      </div>
+    </div>
+  </body>
+</html>

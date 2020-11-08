@@ -7,6 +7,7 @@ import {
   GetRankingQuery,
   QueryRankingsArgs,
   GetRankingsQuery,
+  GiveExperienceReturnType,
 } from '../../generated/graphql'
 import { formatGraphQlErrors } from '../../utils'
 import logger from '../../utils/logging'
@@ -17,7 +18,7 @@ export async function giveExperience(
   userId: string,
   type: ExperienceType,
   timeInVCinS?: number
-): Promise<number> {
+): Promise<GiveExperienceReturnType | null> {
   try {
     let time = timeInVCinS
 
@@ -35,15 +36,18 @@ export async function giveExperience(
 
     if (errors) {
       logger.error(`Error in giveExp: ${formatGraphQlErrors(errors)}`)
-      return -1
+      return null
+    }
+    if (!data) {
+      return null
     }
 
-    return data?.giveExp !== undefined ? data.giveExp : -1
+    return data.giveExp
   } catch (error) {
     logger.error(`errro in giveExperience occurred ${JSON.stringify(error, null, 2)}`)
   }
 
-  return -1
+  return null
 }
 
 export async function getRanking(guildId: string, userId: string) {

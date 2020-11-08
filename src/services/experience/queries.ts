@@ -7,7 +7,10 @@ export const GIVE_EXPERIENCE = gql`
     $type: ExperienceType!
     $timeInVCinS: Int
   ) {
-    giveExp(guildId: $guildId, userId: $userId, type: $type, timeInVCinS: $timeInVCinS)
+    giveExp(guildId: $guildId, userId: $userId, type: $type, timeInVCinS: $timeInVCinS) {
+      expGained
+      hasLeveledUp
+    }
   }
 `
 

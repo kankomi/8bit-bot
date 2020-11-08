@@ -2,16 +2,19 @@ import {
   Client,
   Collection,
   Message,
+  MessageAttachment,
   MessageReaction,
   PartialUser,
+  TextChannel,
   User,
   VoiceState,
 } from 'discord.js'
 import { ExperienceType } from '../generated/graphql'
-import { giveExperience } from '../services/experience'
+import { getRanking, giveExperience } from '../services/experience'
 import logger from '../utils/logging'
 import TimeoutCache from '../utils/TimeoutCache'
 import EventHandlerInterface from './EventHandlerInterface'
+import createBanner from '../services/banner/createBanner'
 
 export default class ExpHandler extends EventHandlerInterface {
   messageCooldowns = new TimeoutCache(5)
@@ -32,6 +35,50 @@ export default class ExpHandler extends EventHandlerInterface {
     this.client.on('messageReactionAdd', (reaction, user) => {
       this.onMessageReactionAdd(reaction, user)
     })
+  }
+
+  async hasLeveledUp(guildId: string, userId: string) {
+    const guild = this.client.guilds.cache.get(guildId)
+    if (!guild) {
+      throw new Error('cannot get guild')
+    }
+
+    const channel = guild.channels.cache.find(
+      (c) => c.name === process.env.BOT_CHANNEL!
+    ) as TextChannel
+
+    if (!channel) {
+      throw new Error('cannot find channel')
+    }
+    const user = guild.member(userId)
+    if (!user) {
+      throw new Error('cannot find user')
+    }
+
+    const rank = await getRanking(guildId, userId)
+
+    if (!rank) {
+      throw new Error('cannot get ranking')
+    }
+
+    const banner = await createBanner(
+      user.user.username,
+      rank.level,
+      rank.experience,
+      rank.expToNextLevel + rank.experience,
+      user.user.avatarURL() || user.user.defaultAvatarURL
+    )
+
+    if (banner) {
+      await channel.send(
+        `<@${userId}> has leveled up!`,
+        new MessageAttachment(banner!, 'banner.jpg')
+      )
+    } else {
+      await channel.send(
+        `\`${user.user.username} is level ${rank.level} with ${rank.experience} EXP. EXP needed for next level: ${rank.expToNextLevel}.\``
+      )
+    }
   }
 
   async onMessage(message: Message) {
@@ -64,7 +111,12 @@ export default class ExpHandler extends EventHandlerInterface {
     this.messageCooldowns.set(userId, message.createdTimestamp)
 
     const expGained = await giveExperience(guildId, userId, ExperienceType.Message)
-    logger.info(`${message.author.username} gained ${expGained} exp for writing a message.`)
+    if (expGained && expGained.hasLeveledUp) {
+      this.hasLeveledUp(guildId, userId)
+      logger.info(
+        `${message.author.username} gained ${expGained?.expGained} exp for writing a message.`
+      )
+    }
   }
 
   onVoiceStateUpdate(oldState: VoiceState, newState: VoiceState) {
@@ -128,8 +180,14 @@ export default class ExpHandler extends EventHandlerInterface {
     const secondsInVc = (Date.now() - enteredTimestamp) / 1000
     const expGained = await giveExperience(guildId, userId, ExperienceType.Voice, secondsInVc)
 
+    if (expGained && expGained.hasLeveledUp) {
+      this.hasLeveledUp(guildId, userId)
+    }
+
     logger.info(
-      `${username} gained ${expGained} exp for being in VC for ${secondsInVc / 60} minutes.`
+      `${username} gained ${expGained?.expGained} exp for being in VC for ${
+        secondsInVc / 60
+      } minutes.`
     )
   }
 
@@ -157,13 +215,23 @@ export default class ExpHandler extends EventHandlerInterface {
 
     // always give the receiver exp
     const expGained = await giveExperience(guildId, userIdReceived, ExperienceType.ReceiveReaction)
-    logger.info(`Giving ${message.author.username} ${expGained} exp for getting a reaction.`)
+    logger.info(
+      `Giving ${message.author.username} ${expGained?.expGained} exp for getting a reaction.`
+    )
+
+    if (expGained && expGained.hasLeveledUp) {
+      this.hasLeveledUp(guildId, userIdReceived)
+    }
 
     // give reaction giver exp on cooldown
     if (this.reactionCooldowns.isExpired(userIdGiven)) {
-      const exp = await giveExperience(guildId, userIdReceived, ExperienceType.GiveReaction)
+      const exp = await giveExperience(guildId, userIdGiven, ExperienceType.GiveReaction)
 
-      logger.info(`Giving ${user.username} ${exp} exp for giving a reaction.`)
+      if (exp && exp.hasLeveledUp) {
+        this.hasLeveledUp(guildId, userIdGiven)
+      }
+
+      logger.info(`Giving ${user.username} ${exp?.expGained} exp for giving a reaction.`)
       this.reactionCooldowns.set(userIdGiven)
     }
   }

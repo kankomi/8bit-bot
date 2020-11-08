@@ -12,14 +12,15 @@ export type Scalars = {
 export type Query = {
   __typename?: 'Query'
   hello: Scalars['String']
+  me: User
   config: Config
   guild: Guild
   message: Scalars['String']
   player: PlayerState
-  searchSong: Array<Song>
+  searchSong?: Maybe<Array<Song>>
   ranking?: Maybe<Ranking>
   rankings: Array<Ranking>
-  statistic: Statistic
+  statistic: Statistics
 }
 
 export type QueryConfigArgs = {
@@ -57,6 +58,14 @@ export type QueryRankingsArgs = {
 export type QueryStatisticArgs = {
   type: StatisticType
   userId: Scalars['String']
+  guildId: Scalars['String']
+}
+
+export type User = {
+  __typename?: 'User'
+  id: Scalars['ID']
+  username: Scalars['String']
+  avatarUrl?: Maybe<Scalars['String']>
   guildId: Scalars['String']
 }
 
@@ -123,25 +132,16 @@ export type Song = {
 
 export type Ranking = {
   __typename?: 'Ranking'
-  id: Scalars['ID']
-  guildId: Scalars['String']
-  userId: Scalars['String']
+  id: Scalars['String']
   experience: Scalars['Int']
   level: Scalars['Int']
-  user?: Maybe<User>
   expToNextLevel: Scalars['Int']
+  user: User
 }
 
-export type User = {
-  __typename?: 'User'
-  id: Scalars['ID']
-  username: Scalars['String']
-  avatarUrl?: Maybe<Scalars['String']>
-}
-
-export type Statistic = {
-  __typename?: 'Statistic'
-  id: Scalars['ID']
+export type Statistics = {
+  __typename?: 'Statistics'
+  id: Scalars['String']
   type: StatisticType
   value: Scalars['Int']
 }
@@ -158,7 +158,7 @@ export enum StatisticType {
 
 export type Mutation = {
   __typename?: 'Mutation'
-  login: UserInfo
+  login: Scalars['String']
   verify: Scalars['Boolean']
   createLoginToken: Scalars['String']
   setConfigValue: Config
@@ -171,8 +171,8 @@ export type Mutation = {
   reorderSongs: PlayerState
   stop: PlayerState
   removeSong: PlayerState
-  giveExp: Scalars['Int']
-  updateStatistic: Statistic
+  giveExp: GiveExperienceReturnType
+  updateStatistic: Statistics
 }
 
 export type MutationLoginArgs = {
@@ -190,7 +190,7 @@ export type MutationCreateLoginTokenArgs = {
 
 export type MutationSetConfigValueArgs = {
   value: Scalars['String']
-  type: Scalars['String']
+  type: ConfigType
   guildId: Scalars['String']
 }
 
@@ -254,18 +254,20 @@ export type MutationUpdateStatisticArgs = {
   guildId: Scalars['String']
 }
 
-export type UserInfo = {
-  __typename?: 'UserInfo'
-  userId: Scalars['String']
-  guildId: Scalars['String']
-  guildName: Scalars['String']
-  username: Scalars['String']
+export enum ConfigType {
+  RankMessageId = 'RANK_MESSAGE_ID',
 }
 
 export type SongInput = {
   title: Scalars['String']
   cover: Scalars['String']
   url: Scalars['String']
+}
+
+export type GiveExperienceReturnType = {
+  __typename?: 'GiveExperienceReturnType'
+  expGained: Scalars['Int']
+  hasLeveledUp: Scalars['Boolean']
 }
 
 export enum ExperienceType {
@@ -317,7 +319,12 @@ export type GiveExperienceMutationVariables = Exact<{
   timeInVCinS?: Maybe<Scalars['Int']>
 }>
 
-export type GiveExperienceMutation = { __typename?: 'Mutation' } & Pick<Mutation, 'giveExp'>
+export type GiveExperienceMutation = { __typename?: 'Mutation' } & {
+  giveExp: { __typename?: 'GiveExperienceReturnType' } & Pick<
+    GiveExperienceReturnType,
+    'expGained' | 'hasLeveledUp'
+  >
+}
 
 export type GetRankingQueryVariables = Exact<{
   guildId: Scalars['String']
@@ -337,7 +344,7 @@ export type GetRankingsQueryVariables = Exact<{
 export type GetRankingsQuery = { __typename?: 'Query' } & {
   rankings: Array<
     { __typename?: 'Ranking' } & Pick<Ranking, 'experience' | 'level' | 'expToNextLevel'> & {
-        user?: Maybe<{ __typename?: 'User' } & Pick<User, 'id' | 'username'>>
+        user: { __typename?: 'User' } & Pick<User, 'id' | 'username'>
       }
   >
 }
@@ -348,7 +355,7 @@ export type SearchSongQueryVariables = Exact<{
 }>
 
 export type SearchSongQuery = { __typename?: 'Query' } & {
-  searchSong: Array<{ __typename?: 'Song' } & Pick<Song, 'title' | 'url' | 'cover'>>
+  searchSong?: Maybe<Array<{ __typename?: 'Song' } & Pick<Song, 'title' | 'url' | 'cover'>>>
 }
 
 export type GetPlayerStateQueryVariables = Exact<{
@@ -454,7 +461,7 @@ export type UpdateStatisticMutationVariables = Exact<{
 }>
 
 export type UpdateStatisticMutation = { __typename?: 'Mutation' } & {
-  updateStatistic: { __typename?: 'Statistic' } & Pick<Statistic, 'value'>
+  updateStatistic: { __typename?: 'Statistics' } & Pick<Statistics, 'value'>
 }
 
 export type GetStatisticQueryVariables = Exact<{
@@ -464,5 +471,5 @@ export type GetStatisticQueryVariables = Exact<{
 }>
 
 export type GetStatisticQuery = { __typename?: 'Query' } & {
-  statistic: { __typename?: 'Statistic' } & Pick<Statistic, 'value'>
+  statistic: { __typename?: 'Statistics' } & Pick<Statistics, 'value'>
 }

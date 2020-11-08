@@ -1,5 +1,6 @@
-import { Message } from 'discord.js'
+import { Message, MessageAttachment } from 'discord.js'
 import config from '../../config'
+import createBanner from '../../services/banner/createBanner'
 import * as expService from '../../services/experience'
 import { Command } from '../../types'
 import logger from '../../utils/logging'
@@ -42,9 +43,22 @@ const GetRankCommand: Command = {
       return false
     }
 
-    await message.channel.send(
-      `\`${username} is level ${rank.level} with ${rank.experience} EXP. EXP needed for next level: ${rank.expToNextLevel}.\``
+    const user = await message.guild.members.fetch(userId)
+    const banner = await createBanner(
+      username,
+      rank.level,
+      rank.experience,
+      rank.expToNextLevel + rank.experience,
+      user.user.avatarURL() || user.user.defaultAvatarURL
     )
+
+    if (banner) {
+      await message.channel.send('', new MessageAttachment(banner!, 'banner.jpg'))
+    } else {
+      await message.channel.send(
+        `\`${username} is level ${rank.level} with ${rank.experience} EXP. EXP needed for next level: ${rank.expToNextLevel}.\``
+      )
+    }
 
     return true
   },

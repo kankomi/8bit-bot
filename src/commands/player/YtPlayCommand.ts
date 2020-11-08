@@ -19,17 +19,27 @@ const { prefix } = config
 async function playStream(connection: VoiceConnection, textChannel: TextChannel, song: Song) {
   const { url, title } = song
 
-  const stream = await ytdl(url)
+  try {
+    logger.info(`trying to get stream ${url}`)
+    const stream = await ytdl(url)
+    logger.info(`started stream ${url}`)
 
-  stream.on('error', (error) => logger.error(`error while streaming ${title}: ${error.message}`))
+    stream.on('error', (error) => logger.error(`error while streaming ${title}: ${error.message}`))
 
-  const dispatcher = connection.play(stream, { type: 'opus' })
+    const dispatcher = connection.play(stream, { type: 'opus' })
 
-  textChannel.send(
-    `Playing song **${title}**\nCheckout the web player here: ${process.env.FRONTEND_URL}/player/${textChannel.guild.id}`
-  )
+    textChannel.send(
+      `Playing song **${title}**\nCheckout the web player here: ${process.env.FRONTEND_URL}/player/${textChannel.guild.id}`
+    )
 
-  return dispatcher
+    return dispatcher
+  } catch (err) {
+    textChannel.send(
+      `Error while playing **${title}**, try again later. This is most likely a Youtube problem`
+    )
+  }
+
+  return undefined
 }
 
 /**
@@ -44,7 +54,7 @@ async function subscribeToPlayerControl(
   channel: TextChannel
 ) {
   const subscription = player.subscribeToPlayerControlState(guildId).subscribe(async ({ data }) => {
-    const action = data?.playerStateUpdated?.action
+    const action = data?.playerStateUpdated.action
     const playSong = data?.playerStateUpdated?.song
 
     if (!action || !connection) {
@@ -75,7 +85,7 @@ async function subscribeToPlayerControl(
         })
 
         // gets called when the song is finished
-        dispatcher.on('finish', async () => {
+        dispatcher?.on('finish', async () => {
           const state = await player.getPlayerState(guildId)
           if (state?.songQueue && state.songQueue.length > 0) {
             player.nextSong(guildId)
@@ -163,11 +173,6 @@ const YtPlayCommand: Command = {
       return false
     }
 
-    if (args.length < 1) {
-      logger.warn('No arguments given!')
-      return false
-    }
-
     const voiceChannel = message.member?.voice.channel
     const searchTerm = args.join('')
     const guildId = voiceChannel?.guild.id
@@ -181,15 +186,6 @@ const YtPlayCommand: Command = {
       message.reply('please join a voice channel first')
       return false
     }
-
-    // search the song on youtube and wait for the user to select one of the results
-    const song = await searchSongAndWaitForReply(searchTerm, message.channel as TextChannel)
-
-    if (!song) {
-      return false
-    }
-
-    logger.info(`chosen song ${song?.title}`)
 
     // check if there is already an established voice connection
     // or if the current connection does not match the voice connection of the bot
@@ -209,6 +205,19 @@ const YtPlayCommand: Command = {
 
       subscriptions.set(guildId, sub)
     }
+
+    if (searchTerm.length === 0) {
+      return true
+    }
+
+    // search the song on youtube and wait for the user to select one of the results
+    const song = await searchSongAndWaitForReply(searchTerm, message.channel as TextChannel)
+
+    if (!song) {
+      return false
+    }
+
+    logger.info(`chosen song ${song?.title}`)
 
     // add the song to the queue
     // the backend will send the 'play' action when the song should be played
